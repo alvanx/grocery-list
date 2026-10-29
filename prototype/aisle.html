@@ -134,11 +134,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .done-t{display:flex;align-items:center;gap:6px;height:36px;margin-left:30px;padding:0 8px;border:0;border-radius:8px;background:none;color:var(--muted);font:13.5px var(--f-ui)}
 .done-t .chev{display:grid;transition:transform .15s;transform:rotate(-90deg)}
 .done-t.open .chev{transform:none}
-.hint-empty{margin-left:34px;padding:6px 8px 10px;color:var(--faint);font-size:13.5px}
 
-.item.editing{align-items:flex-start;background:var(--surface);box-shadow:0 0 0 1px var(--line);margin-block:2px}
-.edit{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;padding:5px 10px 10px 2px}
-.ename{height:34px;border:0;border-bottom:2px solid var(--accent);border-radius:0;background:none;color:var(--ink);font:16px var(--f-ui);outline:0;padding:0 2px}
+.kebab{width:34px;height:40px;color:var(--faint)}
+.item.has-opts{background:var(--surface);border-radius:10px 10px 0 0}
+.opts{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;padding:4px 12px 12px 36px;border-radius:0 0 12px 12px;background:var(--surface)}
+.line-form{flex:1;min-width:0;display:flex;margin:0 8px 0 2px}
+.line-in{flex:1;min-width:0;height:38px;padding:0;border:0;border-bottom:2px solid var(--accent);border-radius:0;background:none;color:var(--ink);font:16px var(--f-ui);outline:0}
+.line-in::placeholder{color:var(--faint)}
+.line-row.new .box{border-style:dashed;border-color:var(--faint)}
+.line-row.new .grip{visibility:hidden}
+.addline{display:flex;align-items:center;width:100%;height:40px;padding:0;border:0;border-radius:10px;background:none;color:var(--faint);font:15px var(--f-ui);text-align:left}
+.addline .al-ic{display:grid;place-items:center;width:38px;margin-left:28px}
 .where{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .where .lbl{font-size:12.5px;color:var(--muted);margin-right:2px}
 .sopt{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid var(--line);border-radius:99px;background:none;color:var(--ink);font:700 13px var(--f-ui)}
@@ -209,7 +215,7 @@ mark{background:var(--mark);color:inherit;border-radius:3px}
   .icon-btn:hover{background:var(--line);color:var(--ink)}
   .res-row:hover{background:var(--surface)}
   .m-item:hover{background:var(--bg)}
-  .item:not(.editing):hover{background:color-mix(in srgb,var(--surface) 70%,transparent)}
+  .item:not(.line-row):not(.has-opts):hover{background:color-mix(in srgb,var(--surface) 70%,transparent)}
 }
 @keyframes flash{0%,35%{background:var(--mark)}100%{background:transparent}}
 .item.flash{animation:flash 1.6s ease-out}
@@ -223,11 +229,11 @@ mark{background:var(--mark);color:inherit;border-radius:3px}
 <div id="app">
   <header id="top">
     <div class="bar">
-      <div class="omni" id="omni">
+      <form class="omni" id="omni" role="search">
         <span class="omni-ic"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.6-3.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
         <input id="q" type="text" placeholder="Add or find an item" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="enter" aria-label="Add or find an item">
         <button id="qclear" class="icon-btn" type="button" aria-label="Clear search" hidden></button>
-      </div>
+      </form>
       <button id="viewBtn" class="icon-btn lg" type="button"></button>
       <button id="menuBtn" class="icon-btn lg" type="button" aria-label="More options" aria-haspopup="true"></button>
     </div>
@@ -267,6 +273,7 @@ const I = {
   tabs: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5h5.5v4H3zM10 4.5h5.5v4H10z" fill="currentColor"/><rect x="3" y="10" width="18" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
   list: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   more: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></g></svg>',
+  dots: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="12" cy="5.5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="18.5" r="1.8"/></g></svg>',
   focus: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   chev: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   plus: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
@@ -383,7 +390,7 @@ function adoptRemote(d) {
   if (!d || (+d.savedAt || 0) <= (state.savedAt || 0)) return;
   try {
     const s = clean(JSON.parse(JSON.stringify(d)));
-    ui.editing = null; ui.renaming = null; ui.editStore = false;
+    ui.line = null; ui.opts = null; ui.renaming = null; ui.editStore = false;
     state = s; saveLocal(); render();
   } catch (e) {}
 }
@@ -406,7 +413,7 @@ async function initRemote() {
 }
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'hidden') { flushRemote(); return; }
-  if (!remote || pending || drag || ui.editing || ui.renaming) return;
+  if (!remote || pending || drag || ui.line || ui.opts || ui.renaming) return;
   try { const snap = await remote.get(); if (snap.exists) adoptRemote(snap.data()); } catch (e) {}
 });
 
@@ -479,32 +486,39 @@ function renderTop() {
   viewBtn.setAttribute('aria-label', vl); viewBtn.title = vl;
 }
 
-function itemHTML(it) {
+const tidy = v => String(v).replace(/\s+/g, ' ').trim();
+function rowHTML(it) {
   const here = byWhere() ? ui.wtab : ui.store;
   const tags = it.stores.filter(s => s !== ui.store && s !== here).map(store).filter(Boolean)
     .map(s => `<span class="tag" style="--c:var(--st${s.color})">${esc(s.name)}</span>`).join('') +
     (it.once && here !== 'once' ? '<span class="tag once">One-off</span>' : '');
   const check = `<button class="check" data-act="check" role="checkbox" aria-checked="${it.done}" aria-label="${it.done ? 'Put back on list' : 'Check off'}: ${esc(it.name)}">${BOX}</button>`;
   const grip = `<span class="grip" data-grip="item" aria-hidden="true">${I.grip}</span>`;
-  if (ui.editing === it.id) {
-    const none = it.stores.length === 0;
-    return `<div class="item editing${it.done ? ' done' : ''}" data-id="${it.id}">${grip}${check}
-      <div class="edit">
-        <input class="ename" id="edit-${it.id}" value="${esc(it.name)}" aria-label="Item name" enterkeyhint="done" autocomplete="off">
-        <div class="where" role="group" aria-label="Where to buy">
-          <span class="lbl">Buy at</span>
-          <button class="sopt${none ? ' on' : ''}" data-sopt="" aria-pressed="${none}">Anywhere</button>
-          ${state.stores.map(s => { const on = it.stores.includes(s.id); return `<button class="sopt${on ? ' on' : ''}" data-sopt="${s.id}" aria-pressed="${on}" style="--c:var(--st${s.color})"><i class="dot"></i>${esc(s.name)}</button>`; }).join('')}
-        </div>
-        <div class="where" role="group" aria-label="When checked off">
-          <span class="lbl">When checked off</span>
-          <button class="sopt${it.once ? '' : ' on'}" data-once="0" aria-pressed="${!it.once}">Keep for next time</button>
-          <button class="sopt${it.once ? ' on' : ''}" data-once="1" aria-pressed="${it.once}">Remove (one-off)</button>
-        </div>
-        <div class="edit-row"><button class="btn danger" data-act="del-item">Delete</button><button class="btn primary" data-act="edit-done">Done</button></div>
-      </div></div>`;
+  const kebab = `<button class="icon-btn kebab" data-act="opts" aria-label="Options for ${esc(it.name)}" aria-expanded="${ui.opts === it.id}" title="Stores, one-off, move, delete">${I.dots}</button>`;
+  if (ui.line && ui.line.mode === 'edit' && ui.line.id === it.id) {
+    return `<div class="item line-row${it.done ? ' done' : ''}" data-id="${it.id}">${grip}${check}<form class="line-form" data-lineform><input class="line-in" id="line-in" value="${esc(it.name)}" aria-label="Item name" enterkeyhint="${it.done ? 'done' : 'next'}" autocomplete="off" autocapitalize="sentences"></form>${kebab}</div>`;
   }
-  return `<div class="item${it.done ? ' done' : ''}" data-id="${it.id}">${grip}${check}<span class="name" data-act="edit">${esc(it.name)}</span>${tags ? `<span class="tags">${tags}</span>` : ''}</div>`;
+  return `<div class="item${it.done ? ' done' : ''}${ui.opts === it.id ? ' has-opts' : ''}" data-id="${it.id}">${grip}${check}<span class="name" data-act="edit">${esc(it.name)}</span>${tags ? `<span class="tags">${tags}</span>` : ''}${kebab}</div>`;
+}
+function optsHTML(it) {
+  const none = it.stores.length === 0;
+  const others = state.cats.filter(c => c.id !== it.cat);
+  return `<div class="opts" data-opts="${it.id}">
+    <div class="where" role="group" aria-label="Where to buy"><span class="lbl">Buy at</span>
+      <button class="sopt${none ? ' on' : ''}" data-sopt="" aria-pressed="${none}">Anywhere</button>
+      ${state.stores.map(s => { const on = it.stores.includes(s.id); return `<button class="sopt${on ? ' on' : ''}" data-sopt="${s.id}" aria-pressed="${on}" style="--c:var(--st${s.color})"><i class="dot"></i>${esc(s.name)}</button>`; }).join('')}
+    </div>
+    <div class="where" role="group" aria-label="When checked off"><span class="lbl">When checked off</span>
+      <button class="sopt${it.once ? '' : ' on'}" data-once="0" aria-pressed="${!it.once}">Keep for next time</button>
+      <button class="sopt${it.once ? ' on' : ''}" data-once="1" aria-pressed="${it.once}">Remove (one-off)</button>
+    </div>
+    ${others.length ? `<div class="where" role="group" aria-label="Move to"><span class="lbl">Move to</span>${others.map(c => `<button class="sopt" data-move="${c.id}">${esc(c.name)}</button>`).join('')}</div>` : ''}
+    <div class="edit-row"><button class="btn danger" data-act="del-item">Delete</button><button class="btn primary" data-act="opts-done">Done</button></div>
+  </div>`;
+}
+function itemHTML(it) { return rowHTML(it) + (ui.opts === it.id ? optsHTML(it) : ''); }
+function lineHTML(c) {
+  return `<div class="item line-row new" data-line>${'<span class="grip" aria-hidden="true"></span>'}<span class="check" aria-hidden="true"><span class="box"></span></span><form class="line-form" data-lineform><input class="line-in" id="line-in" placeholder="New item" aria-label="New item in ${esc(c.name)}" enterkeyhint="next" autocomplete="off" autocapitalize="sentences"></form></div>`;
 }
 
 // mode: 'list' (full list), 'solo' (one category tab), 'sub' (a category inside a store tab)
@@ -516,6 +530,14 @@ function catHTML(c, mode, extra) {
   const folded = !solo && !!ui.collapsed[c.id];
   const openDone = !!ui.openDone[c.id];
   const renaming = ui.renaming === c.id;
+  // The writing line sits right after the item it follows, or at the end.
+  const writing = !!(ui.line && ui.line.mode === 'new' && ui.line.cat === c.id);
+  let needHTML = '', placed = false;
+  for (const it of need) {
+    needHTML += itemHTML(it);
+    if (writing && ui.line.after === it.id) { needHTML += lineHTML(c); placed = true; }
+  }
+  if (writing && !placed) needHTML += lineHTML(c);
   const head = renaming
     ? `<input class="cname-in" id="rename-${c.id}" value="${esc(c.name)}" aria-label="Category name" enterkeyhint="done" autocomplete="off"><button class="icon-btn danger" data-act="del-cat" aria-label="Delete ${esc(c.name)}" title="Delete category">${I.trash}</button><button class="btn primary" data-act="rename-done">Done</button>`
     : `<button class="cname" data-act="rename" title="Rename">${esc(c.name)}</button>${need.length ? `<span class="count">${need.length}</span>` : ''}<span class="sp"></span>` +
@@ -523,8 +545,8 @@ function catHTML(c, mode, extra) {
   return `<section class="cat${folded ? ' folded' : ''}${mode === 'solo' ? ' solo' : ''}" data-cat="${c.id}">
     <div class="cat-h${renaming ? ' renaming' : ''}">${solo ? '' : `<span class="grip" data-grip="cat" aria-hidden="true">${I.grip}</span>`}${head}</div>
     <div class="cat-b">
-      <div class="items" data-zone="need" data-cat="${c.id}">${need.map(itemHTML).join('')}</div>
-      ${!need.length && !done.length ? `<div class="hint-empty">Empty. Drag items here or add one above.</div>` : ''}
+      <div class="items" data-zone="need" data-cat="${c.id}">${needHTML}</div>
+      ${writing ? '' : `<button class="addline" data-act="add-line"><span class="al-ic">${I.plus}</span>Add item</button>`}
       ${done.length ? `<button class="done-t${openDone ? ' open' : ''}" data-act="done" aria-expanded="${openDone}">${I.tick} ${done.length} checked off <span class="chev">${I.chev}</span></button>
       <div class="items" data-zone="done" data-cat="${c.id}"${openDone ? '' : ' hidden'}>${done.map(itemHTML).join('')}</div>` : ''}
     </div></section>`;
@@ -534,10 +556,10 @@ function tipsHTML() {
   return `<aside class="tips" aria-label="Tips">
     <div class="tips-h"><b>Try it out</b><span class="tips-sub">${state.sample ? 'This is a sample list.' : ''}</span><button class="icon-btn sm" data-act="tips-x" aria-label="Hide tips">${I.x}</button></div>
     <ul>
-      <li>Type <b>gar</b> above. Garlic is checked off but shows up. Tap it to add it back.</li>
+      <li>Tap <b>+ Add item</b> and just type. Enter starts the next line. Paste a whole list (even from Keep) to add it all.</li>
+      <li>Type <b>gar</b> in the bar above. Garlic is checked off but shows up. Tap it to add it back.</li>
       <li>Tap <b>Aldi</b> to see what you can buy there. Items you add there are marked Aldi.</li>
-      <li>Hold an item, or its handle, to drag it anywhere.</li>
-      <li>Tap a name to rename it, pick its stores, or make it a one-off (gone once you check it off).</li>
+      <li>Hold an item, or its handle, to drag it anywhere. Its <b>⋮</b> button has stores, one-off, move and delete.</li>
       <li>Tabs button (top right): one category or one store at a time. Swipe between them.</li>
     </ul>
     ${state.sample ? `<p class="tips-f">For your own list: menu (three dots), Clear everything.</p>` : ''}
@@ -557,7 +579,7 @@ function emptyHTML() {
     const tag = '@' + s.name.toLowerCase().replace(/\s+/g, '');
     return `<div class="empty"><p class="empty-h">Nothing for ${esc(s.name)} yet</p><p>Anything you add while ${esc(s.name)} is selected is marked ${esc(s.name)}. You can also tap any item's name and choose ${esc(s.name)}.</p></div>`;
   }
-  return `<div class="empty"><p class="empty-h">Your list is empty</p><p>Type in the bar above to add your first item, or start with a category.</p><button class="btn primary" data-act="add-cat">New category</button></div>`;
+  return `<div class="empty"><p class="empty-h">Your list is empty</p><p>Start writing, paste a list you already have, or make your categories first.</p><p><button class="btn primary" data-act="start-writing">Start writing</button> <button class="btn" data-act="add-cat">New category</button></p></div>`;
 }
 
 function renderList() {
@@ -580,9 +602,13 @@ function renderList() {
     if (w && !reduced) w.classList.add(slideDir > 0 ? 'slide-l' : 'slide-r');
     slideDir = 0;
   }
-  if (ui.editing) {
-    const inp = $('edit-' + ui.editing);
-    if (inp && document.activeElement !== inp) { inp.focus({preventScroll: true}); const L = inp.value.length; inp.setSelectionRange(L, L); }
+  if (ui.line) {
+    const inp = $('line-in');
+    if (inp && document.activeElement !== inp) {
+      inp.focus({preventScroll: true});
+      const L = inp.value.length; inp.setSelectionRange(L, L);
+      scrollToEl(inp.closest('.item'), false);
+    }
   }
   if (ui.renaming) {
     const inp = $('rename-' + ui.renaming);
@@ -703,7 +729,7 @@ function renderResults() {
 
 function openSearch() {
   if (!resultsEl.hidden) return;
-  finishEdit(true); finishRename(true);
+  finishLine(true); ui.opts = null; finishRename(true);
   menuEl.hidden = true;
   resultsEl.hidden = false;
   resultsEl.scrollTop = 0;
@@ -771,6 +797,8 @@ q.addEventListener('keydown', e => {
   else if (e.key === 'Escape') closeSearch(true);
 });
 $('omni').addEventListener('click', e => { if (!e.target.closest('button')) q.focus(); });
+$('omni').addEventListener('submit', e => { e.preventDefault(); submitQuery(); });
+q.addEventListener('paste', e => pasteLines(e, true));
 qclear.innerHTML = I.x;
 qclear.addEventListener('pointerdown', e => e.preventDefault());
 qclear.addEventListener('click', () => { q.value = ''; flash = null; renderResults(); q.focus(); });
@@ -808,33 +836,189 @@ function toggleCheck(id, row) {
     it.done = to; it.doneAt = to ? Date.now() : 0; commit();
   }, reduced || !row ? 0 : 200);
 }
-function startEdit(id) {
+/* Writing: one line is open at a time. {mode:'new', cat, after} adds items; {mode:'edit', id} edits a name. */
+function insertAt(it, cid, after) {
+  const arr = state.items;
+  let idx = -1;
+  const a = after && item(after);
+  if (a && a.cat === cid) idx = arr.indexOf(a) + 1;
+  else arr.forEach((x, k) => { if (x.cat === cid) idx = k + 1; });
+  arr.splice(idx < 0 ? arr.length : idx, 0, it);
+}
+// Adds one written line. A name already on file is brought back instead of duplicated.
+function addFromLine(L, text, done) {
+  const pq = parseQuery(text);
+  if (!pq.name) return null;
+  const ex = state.items.find(i => norm(i.name) === norm(pq.name));
+  if (ex) {
+    const wasDone = ex.done;
+    if (wasDone && !done) {
+      ex.done = false; ex.doneAt = 0;
+      // Written in its own category: it reappears right where you wrote it.
+      if (ex.cat === L.cat) { state.items.splice(state.items.indexOf(ex), 1); insertAt(ex, L.cat, L.after); }
+    }
+    applyTags(ex, pq.tags);
+    return {item: ex, existed: true, wasDone};
+  }
+  const {stores, once} = newWhere(pq, false);
+  const it = {id: uid(), name: pq.name, cat: L.cat, stores, once, done: !!done, doneAt: done ? Date.now() : 0, addedAt: Date.now()};
+  insertAt(it, L.cat, done ? null : L.after);
+  return {item: it};
+}
+function shownHere(it) { return visible(it) && (!byWhere() || inGroup(it, ui.wtab)); }
+function whereName(it) { return it.once ? 'one-off' : it.stores.length ? it.stores.map(id => store(id).name).join(', ') : 'anywhere'; }
+function startLine(cid) {
   finishRename(true);
-  ui.editing = id;
+  ui.opts = null;
+  ui.collapsed[cid] = false;
+  ui.line = {mode: 'new', cat: cid, after: null};
   render();
 }
-function finishEdit(save) {
-  const id = ui.editing;
-  if (!id) return;
-  const inp = $('edit-' + id), it = item(id);
-  ui.editing = null;
-  if (save && it && inp) {
-    const v = inp.value.replace(/\s+/g, ' ').trim();
-    if (v && v !== it.name) { it.name = v; commit(); return; }
-  }
+function editItem(id) {
+  finishRename(true);
+  ui.opts = null;
+  ui.line = {mode: 'edit', id};
   render();
+}
+// Applies what's typed in the open line to the data, without redrawing. Returns true if anything changed.
+function saveLineQuiet() {
+  const L = ui.line;
+  if (!L) return false;
+  const inp = $('line-in'), v = inp ? tidy(inp.value) : '';
+  ui.line = null;
+  let changed = false;
+  if (L.mode === 'new') { if (v && addFromLine(L, v)) changed = true; }
+  else { const it = item(L.id); if (it && v && v !== it.name) { it.name = v; changed = true; } }
+  if (changed) persist();
+  return changed;
+}
+function finishLine(save) {
+  const L = ui.line;
+  if (!L) return;
+  if (save && L.mode === 'edit') {
+    const inp = $('line-in');
+    if (inp && !tidy(inp.value)) { ui.line = null; deleteItem(L.id); return; }
+  }
+  if (save) saveLineQuiet(); else ui.line = null;
+  render();
+}
+function refreshCounts(row) {
+  renderTop();
+  const sec = row.closest('.cat');
+  if (!sec) return;
+  const n = sec.querySelectorAll('[data-zone="need"] > .item[data-id]').length;
+  let cnt = sec.querySelector('.cat-h .count');
+  if (!cnt) { const nm = sec.querySelector('.cat-h .cname'); if (nm) { nm.insertAdjacentHTML('afterend', '<span class="count"></span>'); cnt = sec.querySelector('.cat-h .count'); } }
+  if (cnt) cnt.textContent = n;
+}
+function lineEnter() {
+  const L = ui.line, inp = $('line-in');
+  if (!L || !inp) return;
+  const v = tidy(inp.value);
+  if (L.mode === 'edit') {
+    const it = item(L.id);
+    if (!it) { ui.line = null; render(); return; }
+    if (!v) { ui.line = null; deleteItem(it.id); return; }
+    if (v !== it.name) { it.name = v; persist(); }
+    ui.line = it.done ? null : {mode: 'new', cat: it.cat, after: it.id};
+    render();
+    return;
+  }
+  if (!v) { ui.line = null; render(); return; }   // Enter on an empty line = done writing
+  const r = addFromLine(L, v);
+  if (!r) { inp.value = ''; return; }
+  persist();
+  if (r.existed) {
+    if (r.item.cat === L.cat && !r.item.done) L.after = r.item.id;
+    render();
+    const where = r.item.cat !== L.cat ? ` in ${cat(r.item.cat).name}` : '';
+    note(r.wasDone ? `${r.item.name} was checked off. It's back on your list${where}.` : `${r.item.name} is already on your list${where}.`);
+    return;
+  }
+  // Keep the same input (and the keyboard) and slot the new item in above it.
+  const row = inp.closest('.line-row');
+  if (shownHere(r.item)) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = itemHTML(r.item);
+    row.before(tmp.firstElementChild);
+    L.after = r.item.id;
+  } else note(`Added ${r.item.name} (${whereName(r.item)}). It's hidden in this view.`);
+  inp.value = '';
+  refreshCounts(row);
+  scrollToEl(row, false);
+}
+function lineBackspace() {
+  const L = ui.line, inp = $('line-in');
+  if (!L || !inp) return;
+  const prev = nearItem(inp.closest('.item'), 'previousElementSibling');
+  const next = prev && !prev.classList.contains('done') ? {mode: 'edit', id: prev.dataset.id} : null;
+  if (L.mode === 'new') { ui.line = next; render(); return; }
+  ui.line = next;                       // an emptied item disappears, like erasing a line
+  deleteItem(L.id);
+}
+const BULLET = /^\s*(?:\[\s*([xX✓✔]?)\s*\]|([☐□◻○])|([☑☒✓✔■●])|[-*•·▪◦–—>]+|\d+[.)])\s*/;
+function parseLines(text) {
+  return text.split(/\r?\n/).map(raw => {
+    const m = raw.match(BULLET);
+    return m ? {name: tidy(raw.slice(m[0].length)), done: !!(m[1] || m[3])} : {name: tidy(raw), done: false};
+  }).filter(x => x.name);
+}
+// Pasting several lines adds one item per line. Checked boxes (☑, [x]) come in as checked off.
+function pasteLines(e, fromBar) {
+  const text = e.clipboardData ? e.clipboardData.getData('text') : '';
+  if (!text || !/\n/.test(text.trim())) return;
+  e.preventDefault();
+  const rows = parseLines(text);
+  if (!rows.length) return;
+  const snap = snapshot();
+  let L;
+  if (fromBar) L = {mode: 'new', cat: defaultCat() || ensureCat(), after: null};
+  else {
+    const cur = ui.line, inp = $('line-in');
+    if (!cur || !inp) return;
+    const v = tidy(inp.value);
+    if (cur.mode === 'edit') {
+      const it = item(cur.id);
+      if (!it) return;
+      if (v) it.name = v;
+      L = {mode: 'new', cat: it.cat, after: it.done ? null : it.id};
+    } else {
+      L = {mode: 'new', cat: cur.cat, after: cur.after};
+      if (v) { const r0 = addFromLine(L, v); if (r0 && !r0.existed) L.after = r0.item.id; }
+    }
+  }
+  let added = 0, back = 0;
+  for (const row of rows) {
+    const r = addFromLine(L, row.name, row.done);
+    if (!r) continue;
+    if (r.existed) back++; else { added++; if (!row.done) L.after = r.item.id; }
+  }
+  ui.line = fromBar ? null : {mode: 'new', cat: L.cat, after: L.after};
+  const msg = `Added ${added} item${added === 1 ? '' : 's'} to ${cat(L.cat).name}` + (back ? `. ${back} ${back === 1 ? 'was' : 'were'} already on file.` : '');
+  if (fromBar) { q.value = ''; commit(); noteInSearch(msg, 'Undo', () => restore(snap)); }
+  else { commit(); note(msg, 'Undo', () => { ui.line = null; restore(snap); }); }
 }
 function deleteItem(id) {
   const it = item(id);
   if (!it) return;
   const snap = snapshot();
-  ui.editing = null;
+  if (ui.opts === id) ui.opts = null;
   state.items = state.items.filter(i => i.id !== id);
   commit();
   note(`Deleted ${it.name}`, 'Undo', () => restore(snap));
 }
+function moveItem(id, cid) {
+  const it = item(id), c = cat(cid);
+  if (!it || !c) return;
+  state.items.splice(state.items.indexOf(it), 1);
+  it.cat = cid;
+  insertAt(it, cid, null);
+  ui.opts = null;
+  commit();
+  note(`Moved ${it.name} to ${c.name}`);
+}
 function startRename(cid) {
-  finishEdit(true);
+  finishLine(true); ui.opts = null;
   ui.renaming = cid;
   render();
 }
@@ -850,7 +1034,7 @@ function finishRename(save) {
   render();
 }
 function addCat() {
-  finishEdit(true); finishRename(true);
+  finishLine(true); ui.opts = null; finishRename(true);
   const c = {id: uid(), name: 'New category'};
   if (ui.view === 'tabs' && cat(ui.tab)) state.cats.splice(state.cats.indexOf(cat(ui.tab)) + 1, 0, c);
   else state.cats.push(c);
@@ -888,48 +1072,42 @@ function switchTab(dir) {
 }
 
 listEl.addEventListener('click', e => {
-  const ob = e.target.closest('[data-once]');
-  if (ob) {
-    const row = ob.closest('.item'), it = row && item(row.dataset.id);
-    if (!it) return;
-    it.once = ob.dataset.once === '1';
+  const host = e.target.closest('[data-opts]');
+  const hostItem = host && item(host.dataset.opts);
+  const ob = e.target.closest('[data-once]'), opt = e.target.closest('[data-sopt]'), mv = e.target.closest('[data-move]');
+  if (hostItem && (ob || opt)) {
+    const it = hostItem;
+    if (ob) it.once = ob.dataset.once === '1';
+    else {
+      const sid = opt.dataset.sopt;
+      it.stores = !sid ? [] : it.stores.includes(sid) ? it.stores.filter(x => x !== sid) : sortStores(it.stores.concat(sid));
+    }
     persist();
-    row.querySelectorAll('[data-once]').forEach(b => { const on = (b.dataset.once === '1') === it.once; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    host.querySelectorAll('[data-sopt]').forEach(b => { const on = b.dataset.sopt ? it.stores.includes(b.dataset.sopt) : it.stores.length === 0; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    host.querySelectorAll('[data-once]').forEach(b => { const on = (b.dataset.once === '1') === it.once; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    const rowEl = host.previousElementSibling;
+    if (rowEl && rowEl.dataset.id === it.id) rowEl.outerHTML = rowHTML(it);
     renderTop();
     return;
   }
-  const opt = e.target.closest('[data-sopt]');
-  if (opt) {
-    const row = opt.closest('.item'), it = row && item(row.dataset.id);
-    if (!it) return;
-    const sid = opt.dataset.sopt;
-    if (!sid) it.stores = [];
-    else it.stores = it.stores.includes(sid) ? it.stores.filter(x => x !== sid) : sortStores(it.stores.concat(sid));
-    persist();
-    row.querySelectorAll('[data-sopt]').forEach(b => {
-      const on = b.dataset.sopt ? it.stores.includes(b.dataset.sopt) : it.stores.length === 0;
-      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
-    });
-    renderTop();
-    return;
-  }
+  if (hostItem && mv) return moveItem(hostItem.id, mv.dataset.move);
   const a = e.target.closest('[data-act]');
   if (!a) return;
   const sec = a.closest('.cat'), cid = sec && sec.dataset.cat;
-  const row = a.closest('.item'), iid = row && row.dataset.id;
+  const row = a.closest('.item'), iid = hostItem ? hostItem.id : row && row.dataset.id;
   switch (a.dataset.act) {
-    case 'check':
-      if (ui.editing) { finishEdit(true); toggleCheck(iid, null); }
-      else toggleCheck(iid, row);
-      break;
-    case 'edit': startEdit(iid); break;
-    case 'edit-done': finishEdit(true); break;
+    case 'check': toggleCheck(iid, row && row.isConnected ? row : null); break;
+    case 'edit': editItem(iid); break;
+    case 'opts': ui.opts = ui.opts === iid ? null : iid; render(); break;
+    case 'opts-done': ui.opts = null; render(); break;
     case 'del-item': deleteItem(iid); break;
+    case 'add-line': startLine(cid); break;
+    case 'start-writing': { const c = ensureCat(); commit(); startLine(c); break; }
     case 'rename': startRename(cid); break;
     case 'rename-done': finishRename(true); break;
     case 'del-cat': deleteCat(cid); break;
     case 'fold': ui.collapsed[cid] = !ui.collapsed[cid]; render(); break;
-    case 'focus': ui.view = 'tabs'; ui.tab = cid; render(); listEl.scrollTop = 0; break;
+    case 'focus': ui.view = 'tabs'; ui.tabsBy = 'cat'; ui.tab = cid; render(); listEl.scrollTop = 0; break;
     case 'done': ui.openDone[cid] = !ui.openDone[cid]; render(); break;
     case 'add-cat': addCat(); break;
     case 'tips-x': ui.hint = false; render(); break;
@@ -937,14 +1115,17 @@ listEl.addEventListener('click', e => {
 });
 listEl.addEventListener('keydown', e => {
   const t = e.target;
-  if (t.classList.contains('ename')) {
-    if (e.key === 'Enter') { e.preventDefault(); finishEdit(true); }
-    else if (e.key === 'Escape') finishEdit(false);
+  if (t.id === 'line-in') {
+    if (e.key === 'Enter') { e.preventDefault(); lineEnter(); }
+    else if (e.key === 'Escape') finishLine(true);
+    else if (e.key === 'Backspace' && !t.value) { e.preventDefault(); lineBackspace(); }
   } else if (t.classList.contains('cname-in')) {
     if (e.key === 'Enter') { e.preventDefault(); finishRename(true); }
     else if (e.key === 'Escape') finishRename(false);
   }
 });
+listEl.addEventListener('submit', e => { e.preventDefault(); if (e.target.matches('[data-lineform]')) lineEnter(); });
+listEl.addEventListener('paste', e => { if (e.target.id === 'line-in') pasteLines(e, false); });
 listEl.addEventListener('contextmenu', e => { if (e.target.closest('.item, .cat-h')) e.preventDefault(); });
 
 /* ---------- stores ---------- */
@@ -1081,7 +1262,7 @@ function renderMenu() {
 menuBtn.innerHTML = I.more;
 menuBtn.addEventListener('click', () => {
   if (!menuEl.hidden) { menuEl.hidden = true; return; }
-  closeSearch(true); finishEdit(true); finishRename(true);
+  closeSearch(true); finishLine(true); ui.opts = null; finishRename(true);
   menuMode = 'main'; renderMenu(); menuEl.hidden = false;
 });
 menuEl.addEventListener('click', e => {
@@ -1122,17 +1303,19 @@ menuEl.addEventListener('click', e => {
 });
 
 /* ---------- closing inline editors when tapping elsewhere ---------- */
-document.addEventListener('pointerdown', e => {
+// Runs before the tapped control's own handler, so one tap both closes an editor and does what was tapped.
+window.addEventListener('click', e => {
+  // A drag or swipe ends with a pointerup; swallow the click that follows it so it doesn't also tap something.
+  if (swallowClick) { swallowClick = false; e.preventDefault(); e.stopPropagation(); return; }
   const t = e.target;
-  swallowClick = false;
-  if (ui.editing && !t.closest('.item.editing')) finishEdit(true);
+  if (ui.line && !t.closest('#line-in')) finishLine(true);
+  if (ui.opts && !t.closest('.opts, .has-opts .kebab')) { ui.opts = null; render(); }
   if (ui.renaming && !t.closest('.cat-h.renaming')) finishRename(true);
   if (ui.editStore && !t.closest('#storebar')) finishStoreEdit(true);
   if (!resultsEl.hidden && !t.closest('#results, #omni')) closeSearch(true);
   if (!menuEl.hidden && !t.closest('#menu, #menuBtn')) menuEl.hidden = true;
 }, true);
-// A drag or swipe ends with a pointerup; swallow the click that follows it so it doesn't also tap something.
-window.addEventListener('click', e => { if (swallowClick) { swallowClick = false; e.preventDefault(); e.stopPropagation(); } }, true);
+document.addEventListener('pointerdown', () => { swallowClick = false; }, true);
 
 /* ---------- drag and drop ---------- */
 function buzz() { try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {} }
@@ -1142,6 +1325,7 @@ function startItemDrag(row, x, y, pid) {
   if (!row.isConnected) return;
   const it = item(row.dataset.id);
   if (!it) return;
+  saveLineQuiet(); ui.opts = null;
   const r = row.getBoundingClientRect();
   const ghost = row.cloneNode(true);
   ghost.classList.add('ghost');
@@ -1157,6 +1341,7 @@ function startItemDrag(row, x, y, pid) {
   drag.raf = requestAnimationFrame(tick);
 }
 function startCatDrag(sec, x, y, pid) {
+  saveLineQuiet(); ui.opts = null;
   const hdr = sec.querySelector('.cat-h');
   const before = hdr.getBoundingClientRect().top;
   listEl.classList.add('sorting');
@@ -1233,7 +1418,7 @@ function tick() {
 }
 function nearItem(el, dir) {
   let n = el[dir];
-  while (n && !(n.classList.contains('item') && !n.classList.contains('src'))) n = n[dir];
+  while (n && !(n.classList.contains('item') && !n.classList.contains('src') && n.dataset.id)) n = n[dir];
   return n;
 }
 function dropItem() {
@@ -1315,7 +1500,7 @@ function endDrag() {
 }
 
 listEl.addEventListener('pointerdown', e => {
-  if (e.target.closest('.item.editing button, .cat-h.renaming button')) { e.preventDefault(); return; }
+  if (e.target.closest('.opts button, .cat-h.renaming button')) { e.preventDefault(); return; }
   if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0) || drag) return;
   // Closing an open editor re-renders the list, so find what is under the finger now.
   const t = e.target.isConnected ? e.target : document.elementFromPoint(e.clientX, e.clientY);
@@ -1325,12 +1510,12 @@ listEl.addEventListener('pointerdown', e => {
   if (grip) {
     e.preventDefault();
     sw = null;
-    if (grip.dataset.grip === 'item') { const row = grip.closest('.item'); if (row && !row.classList.contains('editing')) startItemDrag(row, e.clientX, e.clientY, e.pointerId); }
+    if (grip.dataset.grip === 'item') { const row = grip.closest('.item'); if (row && row.dataset.id) startItemDrag(row, e.clientX, e.clientY, e.pointerId); }
     else startCatDrag(grip.closest('.cat'), e.clientX, e.clientY, e.pointerId);
     return;
   }
   const row = t.closest('.item');
-  if (!row || row.classList.contains('editing') || t.closest('button, input')) return;
+  if (!row || !row.dataset.id || row.classList.contains('line-row') || t.closest('button, input')) return;
   press = {row, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, id: e.pointerId, mouse: e.pointerType === 'mouse', t: 0};
   if (!press.mouse) press.t = setTimeout(() => {
     const p = press; press = null;

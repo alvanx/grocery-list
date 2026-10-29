@@ -1,4 +1,4 @@
-# Aisle: grocery list design (v0.2)
+# Aisle: grocery list design (v0.3)
 
 Working name. A compact, Keep-style list built around three fixes:
 
@@ -28,8 +28,9 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 │  ○ Hide items I can buy anywhere  ✎  │  only when a store is selected
 ├──────────────────────────────────────┤
 │ ⠿ Produce  5                   ⤢  ⌄ │  handle · name · count · focus · fold
-│ ⠿ ☐ Bananas                          │
-│ ⠿ ☐ Avocados          Costco  Aldi   │  store tags (blank = anywhere)
+│ ⠿ ☐ Bananas                        ⋮ │  ⋮ = this item's options
+│ ⠿ ☐ Avocados        Costco  Aldi   ⋮ │  store tags (blank = anywhere)
+│   ┆ New item_                        │  writing line: type, Enter, type…
 │     ✓ 4 checked off ›                │  tucked away, one tap to open
 │ ⠿ Dairy & eggs  3              ⤢  ⌄ │
 │   …                                  │
@@ -46,11 +47,25 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 | Move an item to another category (tabs) | Drag it onto a category tab |
 | Change where it's bought (tabs) | Drag it onto a store tab: Anywhere, a store (that store only), or One-offs |
 | Un-check by moving | Drag a checked-off item up into the list |
-| Rename item, choose stores, make it a one-off, delete | Tap its name → inline store chips + "Keep for next time / Remove (one-off)" |
+| Add items | Tap **+ Add item** under a category and type. Enter = next line |
+| Rename an item | Tap its name and type, like editing a note. Enter = new line below it |
+| Erase an item while writing | Clear its text and press Backspace once more (Undo available) |
+| Choose stores, make it a one-off, move it, delete | The item's **⋮** button |
 | Reorder categories | Drag a category's ⠿ (everything folds to headers while you drag) |
 | Rename / delete category | Tap its name |
 | Add / rename / delete store | `+ Store` chip; pencil next to the store toggle |
 | Undo a delete | "Undo" on the message at the bottom; no confirm dialogs |
+
+## Writing a list
+
+Adding should feel like writing on paper:
+
+- Every category ends with a faint **+ Add item** line. Tap it and type.
+- **Enter** saves the line and opens the next one right below it, so the keyboard stays up. **Enter on an empty line** finishes.
+- **Backspace on an empty line** jumps back up to the previous item to fix it.
+- Writing a name that's already on file (say "Garlic", checked off last week) puts that item back on the list instead of making a duplicate.
+- **Paste a list** (from Keep, a note, a text) and every line becomes an item. Bullets and checkboxes are cleaned up. Ticked lines (☑, [x]) come in as checked off.
+- New lines follow the same store rule as everything else: Anywhere on the main list, the store's tag inside a store view or store tab.
 
 ## The find-or-add bar
 
@@ -61,11 +76,11 @@ One box does both jobs:
 - **New name + Enter:** adds it. The row shows where it will go ("to Produce"); category chips underneath let you pick another with one tap.
 - **Add as a one-off:** a second row under "Add …", one tap.
 - **Shortcuts while typing:** `@costco` marks a store, `@anywhere` clears stores, `@once` makes a one-off.
-- The keyboard stays open, so you can add five things in a row.
+- The keyboard stays open, so you can add five things in a row. Pasting a multi-line list here works too.
 
 ## Decisions I made (easy to change)
 
-- **Where new items go:** on the main list (All), new items are **Anywhere**. Inside a store (the Costco chip, or the Costco store tab), they're marked **Costco**. The add row always shows this before you add, and you can change it later by tapping the item's name.
+- **Where new items go:** on the main list (All), new items are **Anywhere**. Inside a store (the Costco chip, or the Costco store tab), they're marked **Costco**. The add row always shows this before you add, and you can change it later from the item's ⋮ menu.
 - Checked-off items sort most recent first.
 - Empty categories are hidden inside store views (less clutter), shown in All.
 - In the prototype the bar is at the top so the phone keyboard can't cover it. The Android app can dock it at the bottom for thumbs.
@@ -89,4 +104,4 @@ Prices, quantity fields (type "x2" in the name), sharing between people, multipl
 
 1. Next step: go straight to the native Android app, or first make this an installable web app on your phone?
 
-Settled: tabs can be split by category or by store/one-off (v0.2); items added in a store view are marked for that store (v0.2).
+Settled: tabs can be split by category or by store/one-off (v0.2); items added in a store view are marked for that store (v0.2); adding works like writing, and item options live behind ⋮ (v0.3). Other input styles can be trialed later.
