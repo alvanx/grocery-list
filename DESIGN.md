@@ -1,4 +1,4 @@
-# Aisle: grocery list design (v0.1)
+# Aisle: grocery list design (v0.2)
 
 Working name. A compact, Keep-style list built around three fixes:
 
@@ -13,10 +13,11 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 | Thing | What it is |
 |---|---|
 | **Item** | Free text ("Eggs, 24 pack"). Belongs to one category. Either *on the list* or *checked off*. Never "used up": checked-off items wait in their category until you need them again. |
+| **One-off item** | Something you'll buy once ("Birthday candles"). Removed when you check it off (with Undo), so it never clutters your history or search. |
 | **Category** | Your own groups, in your own order. Drag to reorder. Rename by tapping the name. |
 | **Store** | A tag on an item. No tag = **Anywhere** (bananas). One or more tags = only those stores (paper towels → Costco). |
 | **Store view** | Tap a store chip: that store's items **plus** anywhere items. Switch on "Hide items I can buy anywhere" to get a dedicated Costco-only list. |
-| **Tabs (focus mode)** | One category per tab. Swipe sideways between them. |
+| **Tabs (focus mode)** | Two ways to split the list into tabs: **Category** (one category per tab) or **Store** (Anywhere · Costco · Aldi · Walmart · One-offs). Swipe sideways between tabs. Store tabs show only items marked for that store, grouped by category. |
 
 ## Screen
 
@@ -42,9 +43,10 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 |---|---|
 | Check off / put back | Tap the box |
 | Move an item (any category) | Hold the item, or drag its ⠿ handle |
-| Move an item in tab mode | Drag it onto another tab |
+| Move an item to another category (tabs) | Drag it onto a category tab |
+| Change where it's bought (tabs) | Drag it onto a store tab: Anywhere, a store (that store only), or One-offs |
 | Un-check by moving | Drag a checked-off item up into the list |
-| Rename item, choose stores, delete | Tap its name → inline row of store chips |
+| Rename item, choose stores, make it a one-off, delete | Tap its name → inline store chips + "Keep for next time / Remove (one-off)" |
 | Reorder categories | Drag a category's ⠿ (everything folds to headers while you drag) |
 | Rename / delete category | Tap its name |
 | Add / rename / delete store | `+ Store` chip; pencil next to the store toggle |
@@ -57,12 +59,13 @@ One box does both jobs:
 - **Empty + tapped:** shows *Recently checked off* as one-tap chips.
 - **Typing:** instantly matches every item, on the list or checked off, with its category, stores and when you last checked it off. Tap → it's back on the list. Typos are forgiven ("chkn" finds "Chicken thighs").
 - **New name + Enter:** adds it. The row shows where it will go ("to Produce"); category chips underneath let you pick another with one tap.
-- **`@store` shortcut:** `paper towels @costco` tags it while adding.
+- **Add as a one-off:** a second row under "Add …", one tap.
+- **Shortcuts while typing:** `@costco` marks a store, `@anywhere` clears stores, `@once` makes a one-off.
 - The keyboard stays open, so you can add five things in a row.
 
 ## Decisions I made (easy to change)
 
-- New items default to **Anywhere**, even when added from a store view. A wrong "anywhere" stays visible; a wrong "Costco only" hides the item from your other stores. Exception: in Costco-only mode, new items get Costco.
+- **Where new items go:** on the main list (All), new items are **Anywhere**. Inside a store (the Costco chip, or the Costco store tab), they're marked **Costco**. The add row always shows this before you add, and you can change it later by tapping the item's name.
 - Checked-off items sort most recent first.
 - Empty categories are hidden inside store views (less clutter), shown in All.
 - In the prototype the bar is at the top so the phone keyboard can't cover it. The Android app can dock it at the bottom for thumbs.
@@ -84,6 +87,6 @@ Prices, quantity fields (type "x2" in the name), sharing between people, multipl
 
 ## Open questions
 
-1. "Manage tabs per item": did you mean choosing which **categories** get a tab, or something else, like pinning single items to a tab (a "This week" tab)?
-2. Should adding an item while in a store view tag it with that store? (Currently: no, see above.)
-3. Next step: go straight to the native Android app, or first make this an installable web app on your phone?
+1. Next step: go straight to the native Android app, or first make this an installable web app on your phone?
+
+Settled: tabs can be split by category or by store/one-off (v0.2); items added in a store view are marked for that store (v0.2).

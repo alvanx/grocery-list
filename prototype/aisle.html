@@ -91,6 +91,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tab .n{font:400 12px var(--f-ui);color:var(--faint);font-variant-numeric:tabular-nums}
 .tab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .tab.drop{background:var(--accent-soft);border-radius:10px 10px 0 0;color:var(--ink)}
+.tab .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.tabrow{display:flex;align-items:center;gap:4px;margin-bottom:-1px}
+.tabrow .tabs{flex:1;min-width:0;margin:0 -16px 0 0;padding-inline:2px 10px}
+.seg{flex:none;display:flex;padding:2px;border-radius:9px;background:var(--line)}
+.seg button{height:28px;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--muted);font:700 12.5px var(--f-ui)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.14)}
 
 .stage{position:relative;flex:1;min-height:0}
 #list{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding-bottom:110px;user-select:none;-webkit-user-select:none}
@@ -123,6 +129,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .done .name{text-decoration:line-through;text-decoration-color:var(--faint)}
 .tags{flex:none;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:46%;padding-right:4px}
 .tag{font:700 11px/1 var(--f-ui);letter-spacing:.02em;color:var(--c);padding:4px 7px;border-radius:99px;background:color-mix(in srgb,var(--c) 13%,transparent)}
+.tag.once{color:var(--muted);background:none;box-shadow:inset 0 0 0 1px var(--line)}
 .done .tag{opacity:.65}
 .done-t{display:flex;align-items:center;gap:6px;height:36px;margin-left:30px;padding:0 8px;border:0;border-radius:8px;background:none;color:var(--muted);font:13.5px var(--f-ui)}
 .done-t .chev{display:grid;transition:transform .15s;transform:rotate(-90deg)}
@@ -170,6 +177,7 @@ body.dragging,body.dragging *{cursor:grabbing!important}
 .rdot{flex:none;display:grid;place-items:center;width:20px;height:20px;border:2px solid var(--muted);border-radius:6px;color:var(--surface)}
 .rdot.d{background:var(--faint);border-color:var(--faint)}
 .plus{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:var(--accent-ink)}
+.plus.alt{background:none;color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
 kbd{flex:none;font:11px var(--f-ui);color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 5px}
 @media (pointer:coarse){kbd{display:none}}
 .recent{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px}
@@ -225,7 +233,10 @@ mark{background:var(--mark);color:inherit;border-radius:3px}
     </div>
     <nav id="stores" class="chips" aria-label="Stores"></nav>
     <div id="storebar" class="storebar" hidden></div>
-    <nav id="tabs" class="tabs" role="tablist" aria-label="Categories" hidden></nav>
+    <div id="tabrow" class="tabrow" hidden>
+      <div id="seg" class="seg" role="group" aria-label="Tabs show"><button type="button" data-by="cat">Category</button><button type="button" data-by="where">Store</button></div>
+      <nav id="tabs" class="tabs" role="tablist" aria-label="Tabs"></nav>
+    </div>
   </header>
   <div class="stage">
     <main id="list" aria-label="Grocery list"></main>
@@ -242,7 +253,7 @@ const LS = 'aisle.state.v1', LSUI = 'aisle.ui.v1';
 const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
 const topEl = $('top'), listEl = $('list'), resultsEl = $('results'), storesEl = $('stores'), storebarEl = $('storebar'),
-      tabsEl = $('tabs'), q = $('q'), qclear = $('qclear'), menuEl = $('menu'), snackEl = $('snack'),
+      tabsEl = $('tabs'), tabrowEl = $('tabrow'), segEl = $('seg'), q = $('q'), qclear = $('qclear'), menuEl = $('menu'), snackEl = $('snack'),
       viewBtn = $('viewBtn'), menuBtn = $('menuBtn');
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -273,8 +284,8 @@ function sample() {
     ['Produce', ['Bananas', 'Avocados|costco aldi', 'Baby spinach', 'Lemons', 'Cilantro', '-Strawberries|costco', '-Garlic', '-Yellow onions', '-Sweet potatoes|aldi']],
     ['Dairy & eggs', ['Eggs, 24 pack|costco', 'Greek yogurt|aldi', 'Oat milk', '-Butter', '-Shredded mozzarella|aldi', '-Sharp cheddar']],
     ['Meat & fish', ['Chicken thighs|costco', 'Ground turkey|aldi', '-Salmon fillets|costco', '-Bacon']],
-    ['Bakery', ['Sourdough loaf', '-Tortillas|walmart', '-Bagels']],
-    ['Pantry', ['Olive oil|costco', 'Pasta|aldi', 'Peanut butter', 'Coffee beans|costco', '-Jasmine rice|costco', '-Canned tomatoes', '-Black beans', '-Maple syrup|costco']],
+    ['Bakery', ['Sourdough loaf', '!Birthday candles|walmart', '-Tortillas|walmart', '-Bagels']],
+    ['Pantry', ['Olive oil|costco', 'Pasta|aldi', 'Peanut butter', 'Coffee beans|costco', '!Saffron (paella night)', '-Jasmine rice|costco', '-Canned tomatoes', '-Black beans', '-Maple syrup|costco']],
     ['Frozen', ['Frozen berries|costco', '-Frozen peas', '-Ice cream']],
     ['Household', ['Paper towels|costco', 'Dish soap|walmart', '-Trash bags|costco walmart', '-Light bulbs|walmart', '-Laundry pods|costco']],
     ['Snacks', ['Tortilla chips|aldi', 'Dark chocolate|aldi', '-Almonds|costco']]
@@ -285,11 +296,11 @@ function sample() {
     const c = {id: uid(), name: cname};
     cats.push(c);
     for (let s of rows) {
-      const done = s[0] === '-';
-      if (done) s = s.slice(1);
+      const done = s[0] === '-', once = s[0] === '!';
+      if (done || once) s = s.slice(1);
       const [name, st] = s.split('|');
       k++;
-      items.push({id: uid(), name, cat: c.id, stores: st ? st.split(' ') : [], done, doneAt: done ? now - k * 5 * H : 0, addedAt: now - 30 * 24 * H});
+      items.push({id: uid(), name, cat: c.id, stores: st ? st.split(' ') : [], once, done, doneAt: done ? now - k * 5 * H : 0, addedAt: now - 30 * 24 * H});
     }
   }
   return {v: 1, savedAt: 0, sample: true, stores, cats, items};
@@ -304,19 +315,19 @@ function clean(s) {
   const items = s.items.filter(i => i && i.id && i.name && cids.has(String(i.cat))).map(i => ({
     id: String(i.id), name: String(i.name), cat: String(i.cat),
     stores: (Array.isArray(i.stores) ? i.stores : []).map(String).filter(x => sids.has(x)),
-    done: !!i.done, doneAt: +i.doneAt || 0, addedAt: +i.addedAt || 0
+    once: !!i.once, done: !!i.done, doneAt: +i.doneAt || 0, addedAt: +i.addedAt || 0
   }));
   return {v: 1, savedAt: +s.savedAt || 0, sample: !!s.sample, stores, cats, items};
 }
 
-const UI0 = {view: 'list', store: 'all', only: false, tab: null, collapsed: {}, openDone: {}, lastCat: null, hint: true};
+const UI0 = {view: 'list', tabsBy: 'cat', store: 'all', only: false, tab: null, wtab: 'any', collapsed: {}, openDone: {}, lastCat: null, hint: true};
 function loadState() { try { const r = localStorage.getItem(LS); if (r) return clean(JSON.parse(r)); } catch (e) {} return null; }
 function loadUI() { try { const r = localStorage.getItem(LSUI); if (r) return Object.assign({}, UI0, JSON.parse(r)); } catch (e) {} return Object.assign({}, UI0); }
 function saveLocal() { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} }
 function saveUI() {
   try {
-    const {view, store, only, tab, collapsed, openDone, lastCat, hint} = ui;
-    localStorage.setItem(LSUI, JSON.stringify({view, store, only, tab, collapsed, openDone, lastCat, hint}));
+    const {view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint} = ui;
+    localStorage.setItem(LSUI, JSON.stringify({view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint}));
   } catch (e) {}
 }
 
@@ -337,6 +348,14 @@ const needIn = cid => state.items.filter(i => i.cat === cid && !i.done && visibl
 function visibleCats() {
   return state.cats.filter(c => ui.store === 'all' || ui.renaming === c.id || state.items.some(i => i.cat === c.id && visible(i)));
 }
+// "Store" tabs: Anywhere, one per store (items marked for it), and One-offs.
+function groups() {
+  return [{id: 'any', name: 'Anywhere'}].concat(state.stores.map(s => ({id: s.id, name: s.name, color: s.color})), [{id: 'once', name: 'One-offs'}]);
+}
+function inGroup(i, g) { return g === 'once' ? i.once : !i.once && (g === 'any' ? i.stores.length === 0 : i.stores.includes(g)); }
+function visibleGroups() { return groups().filter(g => ui.store === 'all' || state.items.some(i => inGroup(i, g.id) && visible(i))); }
+const byWhere = () => ui.view === 'tabs' && ui.tabsBy === 'where';
+function groupOf(it) { return it.once ? 'once' : it.stores.length ? (it.stores.includes(ui.store) ? ui.store : it.stores[0]) : 'any'; }
 function sortStores(ids) { const set = new Set(ids); return state.stores.map(s => s.id).filter(id => set.has(id)); }
 
 /* ---------- saving: this browser + (when available) the viewer's private Claude storage ---------- */
@@ -394,7 +413,10 @@ document.addEventListener('visibilitychange', async () => {
 /* ---------- rendering ---------- */
 function render() {
   if (ui.store !== 'all' && !store(ui.store)) { ui.store = 'all'; ui.only = false; }
-  if (ui.view === 'tabs') {
+  if (byWhere()) {
+    const vg = visibleGroups();
+    if (!vg.some(g => g.id === ui.wtab)) ui.wtab = vg[0] ? vg[0].id : 'any';
+  } else if (ui.view === 'tabs') {
     const vc = visibleCats();
     if (!vc.some(c => c.id === ui.tab)) ui.tab = vc[0] ? vc[0].id : null;
   }
@@ -428,13 +450,23 @@ function renderTop() {
   }
 
   const tabs = ui.view === 'tabs';
-  tabsEl.hidden = !tabs;
+  tabrowEl.hidden = !tabs;
   topEl.classList.toggle('has-tabs', tabs);
   if (tabs) {
+    segEl.querySelectorAll('button').forEach(b => { const on = b.dataset.by === ui.tabsBy; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  }
+  if (tabs && ui.tabsBy === 'where') {
+    tabsEl.innerHTML = visibleGroups().map(g => {
+      const n = state.items.filter(i => !i.done && visible(i) && inGroup(i, g.id)).length, on = g.id === ui.wtab, st = g.color != null;
+      return `<button class="tab${on ? ' on' : ''}" data-wtab="${g.id}" role="tab" aria-selected="${on}"${st ? ` style="--c:var(--st${g.color})"` : ''}>${st ? '<i class="dot"></i>' : ''}${esc(g.name)}<span class="n">${n || ''}</span></button>`;
+    }).join('');
+  } else if (tabs) {
     tabsEl.innerHTML = visibleCats().map(c => {
       const n = needIn(c.id);
       return `<button class="tab${c.id === ui.tab ? ' on' : ''}" data-tab="${c.id}" role="tab" aria-selected="${c.id === ui.tab}">${esc(c.name)}<span class="n">${n || ''}</span></button>`;
     }).join('') + (ui.store === 'all' ? `<button class="tab" data-tabadd aria-label="New category" title="New category">${I.plus}</button>` : '');
+  }
+  if (tabs) {
     const on = tabsEl.querySelector('.on');
     if (on) {
       const l = on.offsetLeft, r = l + on.offsetWidth;
@@ -443,13 +475,15 @@ function renderTop() {
     }
   }
   viewBtn.innerHTML = tabs ? I.list : I.tabs;
-  const vl = tabs ? 'Show all categories in one list' : 'Show categories as tabs';
+  const vl = tabs ? 'Show everything in one list' : 'Show as tabs';
   viewBtn.setAttribute('aria-label', vl); viewBtn.title = vl;
 }
 
 function itemHTML(it) {
-  const tags = it.stores.filter(s => s !== ui.store).map(store).filter(Boolean)
-    .map(s => `<span class="tag" style="--c:var(--st${s.color})">${esc(s.name)}</span>`).join('');
+  const here = byWhere() ? ui.wtab : ui.store;
+  const tags = it.stores.filter(s => s !== ui.store && s !== here).map(store).filter(Boolean)
+    .map(s => `<span class="tag" style="--c:var(--st${s.color})">${esc(s.name)}</span>`).join('') +
+    (it.once && here !== 'once' ? '<span class="tag once">One-off</span>' : '');
   const check = `<button class="check" data-act="check" role="checkbox" aria-checked="${it.done}" aria-label="${it.done ? 'Put back on list' : 'Check off'}: ${esc(it.name)}">${BOX}</button>`;
   const grip = `<span class="grip" data-grip="item" aria-hidden="true">${I.grip}</span>`;
   if (ui.editing === it.id) {
@@ -462,15 +496,23 @@ function itemHTML(it) {
           <button class="sopt${none ? ' on' : ''}" data-sopt="" aria-pressed="${none}">Anywhere</button>
           ${state.stores.map(s => { const on = it.stores.includes(s.id); return `<button class="sopt${on ? ' on' : ''}" data-sopt="${s.id}" aria-pressed="${on}" style="--c:var(--st${s.color})"><i class="dot"></i>${esc(s.name)}</button>`; }).join('')}
         </div>
+        <div class="where" role="group" aria-label="When checked off">
+          <span class="lbl">When checked off</span>
+          <button class="sopt${it.once ? '' : ' on'}" data-once="0" aria-pressed="${!it.once}">Keep for next time</button>
+          <button class="sopt${it.once ? ' on' : ''}" data-once="1" aria-pressed="${it.once}">Remove (one-off)</button>
+        </div>
         <div class="edit-row"><button class="btn danger" data-act="del-item">Delete</button><button class="btn primary" data-act="edit-done">Done</button></div>
       </div></div>`;
   }
   return `<div class="item${it.done ? ' done' : ''}" data-id="${it.id}">${grip}${check}<span class="name" data-act="edit">${esc(it.name)}</span>${tags ? `<span class="tags">${tags}</span>` : ''}</div>`;
 }
 
-function catHTML(c, solo) {
-  const need = state.items.filter(i => i.cat === c.id && !i.done && visible(i));
-  const done = state.items.filter(i => i.cat === c.id && i.done && visible(i)).sort((a, b) => b.doneAt - a.doneAt);
+// mode: 'list' (full list), 'solo' (one category tab), 'sub' (a category inside a store tab)
+function catHTML(c, mode, extra) {
+  const ok = i => i.cat === c.id && visible(i) && (!extra || extra(i));
+  const solo = mode !== 'list';
+  const need = state.items.filter(i => ok(i) && !i.done);
+  const done = state.items.filter(i => ok(i) && i.done).sort((a, b) => b.doneAt - a.doneAt);
   const folded = !solo && !!ui.collapsed[c.id];
   const openDone = !!ui.openDone[c.id];
   const renaming = ui.renaming === c.id;
@@ -478,7 +520,7 @@ function catHTML(c, solo) {
     ? `<input class="cname-in" id="rename-${c.id}" value="${esc(c.name)}" aria-label="Category name" enterkeyhint="done" autocomplete="off"><button class="icon-btn danger" data-act="del-cat" aria-label="Delete ${esc(c.name)}" title="Delete category">${I.trash}</button><button class="btn primary" data-act="rename-done">Done</button>`
     : `<button class="cname" data-act="rename" title="Rename">${esc(c.name)}</button>${need.length ? `<span class="count">${need.length}</span>` : ''}<span class="sp"></span>` +
       (solo ? '' : `<button class="icon-btn" data-act="focus" aria-label="Open ${esc(c.name)} as a tab" title="Focus on this category">${I.focus}</button><button class="icon-btn fold" data-act="fold" aria-expanded="${!folded}" aria-label="${folded ? 'Expand' : 'Collapse'} ${esc(c.name)}">${I.chev}</button>`);
-  return `<section class="cat${folded ? ' folded' : ''}${solo ? ' solo' : ''}" data-cat="${c.id}">
+  return `<section class="cat${folded ? ' folded' : ''}${mode === 'solo' ? ' solo' : ''}" data-cat="${c.id}">
     <div class="cat-h${renaming ? ' renaming' : ''}">${solo ? '' : `<span class="grip" data-grip="cat" aria-hidden="true">${I.grip}</span>`}${head}</div>
     <div class="cat-b">
       <div class="items" data-zone="need" data-cat="${c.id}">${need.map(itemHTML).join('')}</div>
@@ -493,31 +535,42 @@ function tipsHTML() {
     <div class="tips-h"><b>Try it out</b><span class="tips-sub">${state.sample ? 'This is a sample list.' : ''}</span><button class="icon-btn sm" data-act="tips-x" aria-label="Hide tips">${I.x}</button></div>
     <ul>
       <li>Type <b>gar</b> above. Garlic is checked off but shows up. Tap it to add it back.</li>
-      <li>Tap <b>Aldi</b> to see what you can buy there.</li>
+      <li>Tap <b>Aldi</b> to see what you can buy there. Items you add there are marked Aldi.</li>
       <li>Hold an item, or its handle, to drag it anywhere.</li>
-      <li>Tap a name to rename it or pick its stores.</li>
-      <li>Tabs button (top right): one category at a time. Swipe between them.</li>
+      <li>Tap a name to rename it, pick its stores, or make it a one-off (gone once you check it off).</li>
+      <li>Tabs button (top right): one category or one store at a time. Swipe between them.</li>
     </ul>
     ${state.sample ? `<p class="tips-f">For your own list: menu (three dots), Clear everything.</p>` : ''}
   </aside>`;
 }
 
+function groupEmptyHTML(g) {
+  const s = store(g);
+  const body = g === 'once' ? `One-offs are removed when you check them off, so they don't clutter your history. Add one from the bar ("Add as a one-off"), or drag an item onto this tab.`
+    : g === 'any' ? `Items not tied to a store show up here. Drag an item onto this tab to make it buyable anywhere.`
+    : `Items marked ${esc(s ? s.name : '')} show up here. Anything you add on this tab is marked ${esc(s ? s.name : '')}.`;
+  return `<div class="empty"><p class="empty-h">Nothing here yet</p><p>${body}</p></div>`;
+}
 function emptyHTML() {
   if (ui.store !== 'all') {
     const s = store(ui.store);
     const tag = '@' + s.name.toLowerCase().replace(/\s+/g, '');
-    return `<div class="empty"><p class="empty-h">Nothing for ${esc(s.name)} yet</p><p>Tap any item's name and choose ${esc(s.name)}, or add a new item with <b>${esc(tag)}</b> at the end.</p></div>`;
+    return `<div class="empty"><p class="empty-h">Nothing for ${esc(s.name)} yet</p><p>Anything you add while ${esc(s.name)} is selected is marked ${esc(s.name)}. You can also tap any item's name and choose ${esc(s.name)}.</p></div>`;
   }
   return `<div class="empty"><p class="empty-h">Your list is empty</p><p>Type in the bar above to add your first item, or start with a category.</p><button class="btn primary" data-act="add-cat">New category</button></div>`;
 }
 
 function renderList() {
   let h = ui.hint ? tipsHTML() : '';
-  if (ui.view === 'tabs') {
+  if (byWhere()) {
+    const g = ui.wtab, f = i => inGroup(i, g);
+    const secs = state.cats.filter(c => state.items.some(i => i.cat === c.id && visible(i) && f(i))).map(c => catHTML(c, 'sub', f)).join('');
+    h += secs ? `<div id="cats">${secs}</div>` : groupEmptyHTML(g);
+  } else if (ui.view === 'tabs') {
     const c = cat(ui.tab);
-    h += c ? `<div id="cats">${catHTML(c, true)}</div>` : emptyHTML();
+    h += c ? `<div id="cats">${catHTML(c, 'solo')}</div>` : emptyHTML();
   } else {
-    const secs = visibleCats().map(c => catHTML(c, false)).join('');
+    const secs = visibleCats().map(c => catHTML(c, 'list')).join('');
     h += secs ? `<div id="cats">${secs}</div>` : emptyHTML();
     if (secs && ui.store === 'all') h += `<button class="add-cat" data-act="add-cat">${I.plus} New category</button>`;
   }
@@ -544,16 +597,22 @@ function scrollToEl(el, center) {
 }
 
 /* ---------- find or add ---------- */
+const key = s => norm(s).replace(/[^a-z0-9]/g, '');
+// "@costco" marks a store, "@anywhere" clears stores, "@once" makes a one-off.
 function parseQuery(raw) {
   const tags = [];
+  let any = false, once = false;
   const name = raw.replace(/(^|\s)@(\S*)/g, (m, sp, t) => {
     if (!t) return sp;
-    const tn = norm(t);
-    const s = state.stores.find(x => norm(x.name).replace(/\s+/g, '').startsWith(tn));
+    const tn = key(t);
+    if (!tn) return m;
+    if (tn === 'any' || tn === 'anywhere') { any = true; return sp; }
+    if (tn === 'once' || tn === 'oneoff') { once = true; return sp; }
+    const s = state.stores.find(x => key(x.name).startsWith(tn));
     if (s) { if (!tags.includes(s.id)) tags.push(s.id); return sp; }
     return m;
   }).replace(/\s+/g, ' ').trim();
-  return {name, tags};
+  return {name, tags, any, once};
 }
 function subseq(n, q) { let j = 0; for (let i = 0; i < n.length && j < q.length; i++) if (n[i] === q[j]) j++; return j === q.length; }
 function score(n, qn) {
@@ -580,9 +639,22 @@ function ago(t) {
   return Math.round(d / 30) + ' months ago';
 }
 function defaultCat() {
-  if (ui.view === 'tabs' && cat(ui.tab)) return ui.tab;
+  if (ui.view === 'tabs' && ui.tabsBy !== 'where' && cat(ui.tab)) return ui.tab;
   if (cat(ui.lastCat)) return ui.lastCat;
   return state.cats[0] ? state.cats[0].id : null;
+}
+// Where a new item is bought: the store tab or store view you're in, otherwise anywhere.
+function addTarget() {
+  if (byWhere()) {
+    if (ui.wtab === 'once') return {stores: ui.store !== 'all' ? [ui.store] : [], once: true};
+    if (store(ui.wtab)) return {stores: [ui.wtab], once: false};
+    return {stores: [], once: false};
+  }
+  return {stores: ui.store !== 'all' ? [ui.store] : [], once: false};
+}
+function newWhere(pq, forceOnce) {
+  const t = addTarget();
+  return {stores: pq.any ? [] : pq.tags.length ? sortStores(pq.tags) : t.stores, once: !!(forceOnce || pq.once || t.once)};
 }
 function ensureCat() {
   let c = state.cats.find(x => x.name === 'Unsorted');
@@ -593,21 +665,24 @@ function ensureCat() {
 function resRow(i, query) {
   const c = cat(i.cat);
   const ss = i.stores.map(s => (store(s) || {}).name).filter(Boolean);
-  const meta = [c ? c.name : '', ss.length ? ss.join(', ') : 'Anywhere', i.done ? 'checked off ' + ago(i.doneAt) : 'on your list'];
+  const meta = [c ? c.name : '', ss.length ? ss.join(', ') : 'Anywhere'].concat(i.once ? ['one-off'] : [], [i.done ? 'checked off ' + ago(i.doneAt) : 'on your list']);
   return `<button class="res-row" data-res="${i.id}"><span class="rdot${i.done ? ' d' : ''}">${i.done ? I.tick : ''}</span><span class="rmain"><span class="rname">${hl(i.name, query)}</span><span class="rmeta">${esc(meta.join(' · '))}</span></span><span class="ract">${i.done ? 'Add back' : 'Show'}</span></button>`;
 }
 
 function renderResults() {
   const raw = q.value;
   qclear.hidden = !raw;
-  const {name, tags} = parseQuery(raw);
+  const pq = parseQuery(raw), name = pq.name;
   let h = '';
   if (flash) h += `<div class="res-flash" role="status">${I.ok}<span>${esc(flash.msg)}</span>${flash.action ? `<button class="link" data-flash>${esc(flash.action)}</button>` : ''}</div>`;
   if (!name) {
     const rec = state.items.filter(i => i.done).sort((a, b) => b.doneAt - a.doneAt).slice(0, 12);
     if (rec.length) h += `<div class="res-h">Recently checked off · tap to add back</div><div class="recent">${rec.map(i => `<button class="chip" data-res="${i.id}">${esc(i.name)}</button>`).join('')}</div>`;
-    const ex = state.stores[0] ? '@' + state.stores[0].name.toLowerCase().replace(/\s+/g, '') : '@store';
-    h += `<p class="res-tip">Type to find anything, including items you've checked off. Press Enter to add something new. Put <b>${esc(ex)}</b> at the end to mark where to buy it.</p>`;
+    const t = addTarget();
+    const ex = state.stores[0] ? '@' + key(state.stores[0].name) : '@store';
+    const where = t.stores.length ? `New items here are marked <b>${esc(store(t.stores[0]).name)}</b>${t.once ? ' and one-off' : ''}. Add <b>@anywhere</b> to change that.`
+      : t.once ? 'New items here are one-offs.' : `Put <b>${esc(ex)}</b> at the end to mark where to buy it, or <b>@once</b> for a one-off.`;
+    h += `<p class="res-tip">Type to find anything, including items you've checked off. Press Enter to add something new. ${where}</p>`;
   } else {
     const qn = norm(name);
     const ms = state.items.map(i => [i, score(norm(i.name), qn)]).filter(x => x[1] > 0)
@@ -615,9 +690,10 @@ function renderResults() {
     const exact = ms.find(i => norm(i.name) === qn);
     if (ms.length) h += `<div class="res-h">Already on file</div>` + ms.map(i => resRow(i, name)).join('');
     if (!exact) {
-      const dc = defaultCat();
-      const tagTxt = tags.map(id => store(id).name).join(', ');
-      h += `<div class="res-h">New item</div><button class="res-row" data-add="${dc || ''}"><span class="plus">${I.plus}</span><span class="rmain"><span>Add <b>${esc(name)}</b></span><span class="rmeta">to ${esc(dc ? cat(dc).name : 'Unsorted')} · ${esc(tagTxt || 'Anywhere')}</span></span><kbd>Enter</kbd></button>`;
+      const dc = defaultCat(), nw = newWhere(pq, false);
+      const whereTxt = (nw.stores.map(id => store(id).name).join(', ') || 'Anywhere') + (nw.once ? ' · one-off' : '');
+      h += `<div class="res-h">New item</div><button class="res-row" data-add="${dc || ''}"><span class="plus">${I.plus}</span><span class="rmain"><span>Add <b>${esc(name)}</b></span><span class="rmeta">to ${esc(dc ? cat(dc).name : 'Unsorted')} · ${esc(whereTxt)}</span></span><kbd>Enter</kbd></button>`;
+      if (!nw.once) h += `<button class="res-row" data-add-once="${dc || ''}"><span class="plus alt">${I.plus}</span><span class="rmain"><span>Add as a one-off</span><span class="rmeta">Removed when you check it off, so it won't clutter your history</span></span></button>`;
       const others = state.cats.filter(c => c.id !== dc);
       if (others.length) h += `<div class="catpick"><span>Or add to</span>${others.map(c => `<button class="chip" data-add="${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
     }
@@ -650,11 +726,11 @@ function bringBack(it, tags) {
   const msg = `${it.name} is back on your list` + (c ? ` (${c.name})` : '');
   if (!resultsEl.hidden) noteInSearch(msg, 'Undo', () => restore(snap)); else note(msg, 'Undo', () => restore(snap));
 }
-function addItem(name, cid, tags) {
+function addItem(name, cid, pq, forceOnce) {
   const snap = snapshot();
   if (!cid || !cat(cid)) cid = defaultCat() || ensureCat();
-  const stores = tags.length ? sortStores(tags) : (ui.store !== 'all' && ui.only ? [ui.store] : []);
-  const it = {id: uid(), name, cat: cid, stores, done: false, doneAt: 0, addedAt: Date.now()};
+  const {stores, once} = newWhere(pq, forceOnce);
+  const it = {id: uid(), name, cat: cid, stores, once, done: false, doneAt: 0, addedAt: Date.now()};
   let last = -1;
   state.items.forEach((x, k) => { if (x.cat === cid) last = k; });
   state.items.splice(last >= 0 ? last + 1 : state.items.length, 0, it);
@@ -662,13 +738,13 @@ function addItem(name, cid, tags) {
   ui.collapsed[cid] = false;
   q.value = '';
   commit();
-  noteInSearch(`Added ${name} to ${cat(cid).name}`, 'Undo', () => restore(snap));
+  noteInSearch(`Added ${name} to ${cat(cid).name}` + (once ? ' as a one-off' : ''), 'Undo', () => restore(snap));
 }
 function submitQuery() {
-  const {name, tags} = parseQuery(q.value);
+  const pq = parseQuery(q.value), {name, tags} = pq;
   if (!name) return;
   const exact = state.items.find(i => norm(i.name) === norm(name));
-  if (!exact) return addItem(name, null, tags);
+  if (!exact) return addItem(name, null, pq);
   if (exact.done) return bringBack(exact, tags);
   if (tags.length) { applyTags(exact, tags); persist(); }
   q.value = '';
@@ -679,7 +755,9 @@ function jumpTo(id) {
   if (!it) return;
   closeSearch(true);
   if (!visible(it)) { ui.store = 'all'; ui.only = false; }
-  if (ui.view === 'tabs') ui.tab = it.cat; else ui.collapsed[it.cat] = false;
+  if (byWhere()) ui.wtab = groupOf(it);
+  else if (ui.view === 'tabs') ui.tab = it.cat;
+  else ui.collapsed[it.cat] = false;
   if (it.done) ui.openDone[it.cat] = true;
   render();
   const el = listEl.querySelector(`.item[data-id="${id}"]`);
@@ -701,7 +779,7 @@ resultsEl.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
   if (b.hasAttribute('data-flash')) { const f = flash; flash = null; if (f && f.fn) f.fn(); if (!resultsEl.hidden) renderResults(); return; }
-  const {name, tags} = parseQuery(q.value);
+  const pq = parseQuery(q.value), {name, tags} = pq;
   if (b.dataset.res) {
     const it = item(b.dataset.res);
     if (!it) return;
@@ -709,7 +787,8 @@ resultsEl.addEventListener('click', e => {
     else { if (tags.length) { applyTags(it, tags); persist(); } jumpTo(it.id); }
     return;
   }
-  if (b.hasAttribute('data-add') && name) addItem(name, b.dataset.add || null, tags);
+  if (b.hasAttribute('data-add') && name) addItem(name, b.dataset.add || null, pq);
+  if (b.hasAttribute('data-add-once') && name) addItem(name, b.dataset.addOnce || null, pq, true);
 });
 
 /* ---------- item + category actions ---------- */
@@ -718,7 +797,16 @@ function toggleCheck(id, row) {
   if (!it) return;
   const to = !it.done;
   if (row) row.classList.add(to ? 'checking' : 'unchecking');
-  setTimeout(() => { it.done = to; it.doneAt = to ? Date.now() : 0; commit(); }, reduced || !row ? 0 : 200);
+  setTimeout(() => {
+    if (to && it.once) {
+      const snap = snapshot();
+      state.items = state.items.filter(i => i.id !== id);
+      commit();
+      note(`Checked off ${it.name}. One-offs aren't kept.`, 'Undo', () => restore(snap));
+      return;
+    }
+    it.done = to; it.doneAt = to ? Date.now() : 0; commit();
+  }, reduced || !row ? 0 : 200);
 }
 function startEdit(id) {
   finishRename(true);
@@ -768,7 +856,7 @@ function addCat() {
   else state.cats.push(c);
   if (ui.store !== 'all') { ui.store = 'all'; ui.only = false; }
   ui.renaming = c.id;
-  if (ui.view === 'tabs') ui.tab = c.id;
+  if (ui.view === 'tabs') { ui.tabsBy = 'cat'; ui.tab = c.id; }
   commit();
   const sec = listEl.querySelector(`.cat[data-cat="${c.id}"]`);
   if (sec) scrollToEl(sec, false);
@@ -785,16 +873,31 @@ function deleteCat(cid) {
   note(`Deleted ${c.name}` + (n ? ` and its ${n} item${n > 1 ? 's' : ''}` : ''), 'Undo', () => restore(snap));
 }
 function switchTab(dir) {
-  const vc = visibleCats();
-  const k = vc.findIndex(c => c.id === ui.tab);
-  const n = vc[k + dir];
-  if (!n) return;
-  ui.tab = n.id; slideDir = dir;
+  if (byWhere()) {
+    const vg = visibleGroups(), n = vg[vg.findIndex(g => g.id === ui.wtab) + dir];
+    if (!n) return;
+    ui.wtab = n.id;
+  } else {
+    const vc = visibleCats(), n = vc[vc.findIndex(c => c.id === ui.tab) + dir];
+    if (!n) return;
+    ui.tab = n.id;
+  }
+  slideDir = dir;
   render();
   listEl.scrollTop = 0;
 }
 
 listEl.addEventListener('click', e => {
+  const ob = e.target.closest('[data-once]');
+  if (ob) {
+    const row = ob.closest('.item'), it = row && item(row.dataset.id);
+    if (!it) return;
+    it.once = ob.dataset.once === '1';
+    persist();
+    row.querySelectorAll('[data-once]').forEach(b => { const on = (b.dataset.once === '1') === it.once; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    renderTop();
+    return;
+  }
   const opt = e.target.closest('[data-sopt]');
   if (opt) {
     const row = opt.closest('.item'), it = row && item(row.dataset.id);
@@ -920,11 +1023,23 @@ tabsEl.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
   if (b.hasAttribute('data-tabadd')) return addCat();
+  if (b.dataset.wtab) {
+    if (b.dataset.wtab === ui.wtab) return;
+    const vg = visibleGroups();
+    slideDir = Math.sign(vg.findIndex(g => g.id === b.dataset.wtab) - vg.findIndex(g => g.id === ui.wtab));
+    ui.wtab = b.dataset.wtab; render(); listEl.scrollTop = 0;
+    return;
+  }
   const id = b.dataset.tab;
   if (!id || id === ui.tab) return;
   const vc = visibleCats();
   slideDir = Math.sign(vc.findIndex(c => c.id === id) - vc.findIndex(c => c.id === ui.tab));
   ui.tab = id; render(); listEl.scrollTop = 0;
+});
+segEl.addEventListener('click', e => {
+  const b = e.target.closest('[data-by]');
+  if (!b || b.dataset.by === ui.tabsBy) return;
+  ui.tabsBy = b.dataset.by; render(); listEl.scrollTop = 0;
 });
 viewBtn.addEventListener('click', () => {
   ui.view = ui.view === 'tabs' ? 'list' : 'tabs';
@@ -1067,10 +1182,14 @@ function moveDrag(x, y) {
 }
 function itemTarget(x, y) {
   const el = document.elementFromPoint(x, y);
-  clearDrop(); drag.tab = null; drag.foldCat = null;
+  clearDrop(); drag.tab = null; drag.wtab = null; drag.foldCat = null;
   if (!el) return;
-  const tab = el.closest('.tab[data-tab]');
-  if (tab) { tab.classList.add('drop'); drag.tab = tab.dataset.tab; return; }
+  const tab = el.closest('.tab[data-tab], .tab[data-wtab]');
+  if (tab) {
+    tab.classList.add('drop');
+    if (tab.dataset.wtab) drag.wtab = tab.dataset.wtab; else drag.tab = tab.dataset.tab;
+    return;
+  }
   if (!listEl.contains(el) || el.closest('.ph')) return;
   const row = el.closest('.item');
   if (row && row.parentElement && row.parentElement.dataset.zone) {
@@ -1101,7 +1220,7 @@ function tick() {
   if (!drag) return;
   const r = listEl.getBoundingClientRect(), E = 60;
   let v = 0;
-  if (!drag.tab) {
+  if (!drag.tab && !drag.wtab) {
     if (drag.y < r.top + E && drag.y > r.top - 30) v = -Math.min(16, (r.top + E - drag.y) / 3);
     else if (drag.y > r.bottom - E) v = Math.min(16, (drag.y - (r.bottom - E)) / 3);
   }
@@ -1121,6 +1240,14 @@ function dropItem() {
   const it = item(drag.id);
   if (!it) return false;
   let cid, done, beforeId = null, afterId = null;
+  if (drag.wtab) {
+    // Dropping on a store tab changes where it's bought, not its place in the list.
+    const g = drag.wtab;
+    if (g === ui.wtab) return false;
+    if (g === 'once') it.once = true;
+    else { it.once = false; it.stores = g === 'any' ? [] : [g]; }
+    return true;
+  }
   if (drag.tab) {
     cid = drag.tab; done = false;
     const first = state.items.find(i => i.cat === cid && !i.done && i.id !== it.id && visible(i));
@@ -1169,6 +1296,10 @@ function endDrag() {
     ok = dropItem();
     if (ok && d.tab && d.tab !== d.from) moved = `Moved ${item(d.id).name} to ${cat(d.tab).name}`;
     if (ok && d.foldCat && d.foldCat !== d.from) moved = `Moved ${item(d.id).name} to ${cat(d.foldCat).name}`;
+    if (ok && d.wtab) {
+      const nm = item(d.id).name;
+      moved = d.wtab === 'once' ? `${nm} is now a one-off` : d.wtab === 'any' ? `${nm} can now be bought anywhere` : `${nm} is now marked ${store(d.wtab).name} only`;
+    }
   } else ok = dropCat();
   d.ghost.remove(); d.ph.remove(); clearDrop();
   listEl.classList.remove('sorting');
