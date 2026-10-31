@@ -52,7 +52,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 #app{position:relative;height:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column}
 #top{flex:none;display:flex;flex-direction:column;gap:8px;padding-block:10px;border-bottom:1px solid var(--line)}
-#top.has-tabs{padding-bottom:0}
+#top{padding-bottom:0}
 .bar{display:flex;align-items:center;gap:2px}
 .omni{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:46px;padding:0 4px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;cursor:text}
 .omni:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -91,12 +91,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tab .n{font:400 12px var(--f-ui);color:var(--faint);font-variant-numeric:tabular-nums}
 .tab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .tab.drop{background:var(--accent-soft);border-radius:10px 10px 0 0;color:var(--ink)}
-.tab .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
 .tabrow{display:flex;align-items:center;gap:4px;margin-bottom:-1px}
-.tabrow .tabs{flex:1;min-width:0;margin:0 -16px 0 0;padding-inline:2px 10px}
-.seg{flex:none;display:flex;padding:2px;border-radius:9px;background:var(--line)}
-.seg button{height:28px;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--muted);font:700 12.5px var(--f-ui)}
-.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.tabrow .tabs{flex:1;min-width:0;margin:0 -16px;padding-inline:10px}
+.chip.drop{outline:3px solid var(--c,var(--accent));outline-offset:1px}
 
 .stage{position:relative;flex:1;min-height:0}
 #list{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding-bottom:110px;user-select:none;-webkit-user-select:none}
@@ -155,6 +152,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 .ghost{position:fixed;z-index:60;pointer-events:none;background:var(--surface);border-radius:10px;box-shadow:var(--shadow)}
 .ghost .cat-h{position:static;background:none;padding-right:8px}
+.ghost.over{opacity:.55;transform:scale(.92);transition:opacity .1s,transform .1s}
 .src{display:none!important}
 .ph{flex:none;border-radius:10px;background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
 .cat.drop>.cat-h{background:var(--accent-soft);border-radius:10px}
@@ -234,14 +232,12 @@ mark{background:var(--mark);color:inherit;border-radius:3px}
         <input id="q" type="text" placeholder="Add or find an item" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="enter" aria-label="Add or find an item">
         <button id="qclear" class="icon-btn" type="button" aria-label="Clear search" hidden></button>
       </form>
-      <button id="viewBtn" class="icon-btn lg" type="button"></button>
       <button id="menuBtn" class="icon-btn lg" type="button" aria-label="More options" aria-haspopup="true"></button>
     </div>
     <nav id="stores" class="chips" aria-label="Stores"></nav>
     <div id="storebar" class="storebar" hidden></div>
-    <div id="tabrow" class="tabrow" hidden>
-      <div id="seg" class="seg" role="group" aria-label="Tabs show"><button type="button" data-by="cat">Category</button><button type="button" data-by="where">Store</button></div>
-      <nav id="tabs" class="tabs" role="tablist" aria-label="Tabs"></nav>
+    <div id="tabrow" class="tabrow">
+      <nav id="tabs" class="tabs" role="tablist" aria-label="Categories"></nav>
     </div>
   </header>
   <div class="stage">
@@ -259,8 +255,8 @@ const LS = 'aisle.state.v1', LSUI = 'aisle.ui.v1';
 const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
 const topEl = $('top'), listEl = $('list'), resultsEl = $('results'), storesEl = $('stores'), storebarEl = $('storebar'),
-      tabsEl = $('tabs'), tabrowEl = $('tabrow'), segEl = $('seg'), q = $('q'), qclear = $('qclear'), menuEl = $('menu'), snackEl = $('snack'),
-      viewBtn = $('viewBtn'), menuBtn = $('menuBtn');
+      tabsEl = $('tabs'), tabrowEl = $('tabrow'), q = $('q'), qclear = $('qclear'), menuEl = $('menu'), snackEl = $('snack'),
+      menuBtn = $('menuBtn');
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -270,11 +266,8 @@ const I = {
   grip: '<svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true"><g fill="currentColor"><circle cx="2" cy="2" r="1.6"/><circle cx="8" cy="2" r="1.6"/><circle cx="2" cy="8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="2" cy="14" r="1.6"/><circle cx="8" cy="14" r="1.6"/></g></svg>',
   tick: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4 4.8 9 10 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   x: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-  tabs: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5h5.5v4H3zM10 4.5h5.5v4H10z" fill="currentColor"/><rect x="3" y="10" width="18" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
-  list: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   more: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></g></svg>',
   dots: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="12" cy="5.5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="18.5" r="1.8"/></g></svg>',
-  focus: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   chev: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   plus: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
   pencil: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
@@ -327,14 +320,14 @@ function clean(s) {
   return {v: 1, savedAt: +s.savedAt || 0, sample: !!s.sample, stores, cats, items};
 }
 
-const UI0 = {view: 'list', tabsBy: 'cat', store: 'all', only: false, tab: null, wtab: 'any', collapsed: {}, openDone: {}, lastCat: null, hint: true};
+const UI0 = {view: 'list', store: 'all', only: false, tab: null, collapsed: {}, openDone: {}, lastCat: null, hint: true};
 function loadState() { try { const r = localStorage.getItem(LS); if (r) return clean(JSON.parse(r)); } catch (e) {} return null; }
 function loadUI() { try { const r = localStorage.getItem(LSUI); if (r) return Object.assign({}, UI0, JSON.parse(r)); } catch (e) {} return Object.assign({}, UI0); }
 function saveLocal() { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} }
 function saveUI() {
   try {
-    const {view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint} = ui;
-    localStorage.setItem(LSUI, JSON.stringify({view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint}));
+    const {view, store, only, tab, collapsed, openDone, lastCat, hint} = ui;
+    localStorage.setItem(LSUI, JSON.stringify({view, store, only, tab, collapsed, openDone, lastCat, hint}));
   } catch (e) {}
 }
 
@@ -355,14 +348,6 @@ const needIn = cid => state.items.filter(i => i.cat === cid && !i.done && visibl
 function visibleCats() {
   return state.cats.filter(c => ui.store === 'all' || ui.renaming === c.id || state.items.some(i => i.cat === c.id && visible(i)));
 }
-// "Store" tabs: Anywhere, one per store (items marked for it), and One-offs.
-function groups() {
-  return [{id: 'any', name: 'Anywhere'}].concat(state.stores.map(s => ({id: s.id, name: s.name, color: s.color})), [{id: 'once', name: 'One-offs'}]);
-}
-function inGroup(i, g) { return g === 'once' ? i.once : !i.once && (g === 'any' ? i.stores.length === 0 : i.stores.includes(g)); }
-function visibleGroups() { return groups().filter(g => ui.store === 'all' || state.items.some(i => inGroup(i, g.id) && visible(i))); }
-const byWhere = () => ui.view === 'tabs' && ui.tabsBy === 'where';
-function groupOf(it) { return it.once ? 'once' : it.stores.length ? (it.stores.includes(ui.store) ? ui.store : it.stores[0]) : 'any'; }
 function sortStores(ids) { const set = new Set(ids); return state.stores.map(s => s.id).filter(id => set.has(id)); }
 
 /* ---------- saving: this browser + (when available) the viewer's private Claude storage ---------- */
@@ -420,13 +405,7 @@ document.addEventListener('visibilitychange', async () => {
 /* ---------- rendering ---------- */
 function render() {
   if (ui.store !== 'all' && !store(ui.store)) { ui.store = 'all'; ui.only = false; }
-  if (byWhere()) {
-    const vg = visibleGroups();
-    if (!vg.some(g => g.id === ui.wtab)) ui.wtab = vg[0] ? vg[0].id : 'any';
-  } else if (ui.view === 'tabs') {
-    const vc = visibleCats();
-    if (!vc.some(c => c.id === ui.tab)) ui.tab = vc[0] ? vc[0].id : null;
-  }
+  if (ui.view === 'tabs' && !visibleCats().some(c => c.id === ui.tab)) ui.view = 'list';
   renderTop();
   renderList();
   if (!resultsEl.hidden) renderResults();
@@ -456,42 +435,26 @@ function renderTop() {
       : `<button class="sb-toggle" data-sb="only" role="switch" aria-checked="${!!ui.only}"><span class="switch"><span class="knob"></span></span><span>Hide items I can buy anywhere</span></button><button class="icon-btn sm" data-sb="edit" aria-label="Rename or delete ${esc(s.name)}" title="Rename or delete store">${I.pencil}</button>`;
   }
 
-  const tabs = ui.view === 'tabs';
-  tabrowEl.hidden = !tabs;
-  topEl.classList.toggle('has-tabs', tabs);
-  if (tabs) {
-    segEl.querySelectorAll('button').forEach(b => { const on = b.dataset.by === ui.tabsBy; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-  }
-  if (tabs && ui.tabsBy === 'where') {
-    tabsEl.innerHTML = visibleGroups().map(g => {
-      const n = state.items.filter(i => !i.done && visible(i) && inGroup(i, g.id)).length, on = g.id === ui.wtab, st = g.color != null;
-      return `<button class="tab${on ? ' on' : ''}" data-wtab="${g.id}" role="tab" aria-selected="${on}"${st ? ` style="--c:var(--st${g.color})"` : ''}>${st ? '<i class="dot"></i>' : ''}${esc(g.name)}<span class="n">${n || ''}</span></button>`;
-    }).join('');
-  } else if (tabs) {
-    tabsEl.innerHTML = visibleCats().map(c => {
-      const n = needIn(c.id);
-      return `<button class="tab${c.id === ui.tab ? ' on' : ''}" data-tab="${c.id}" role="tab" aria-selected="${c.id === ui.tab}">${esc(c.name)}<span class="n">${n || ''}</span></button>`;
+  // Tabs: All (the whole list) plus one per category.
+  const all = ui.view !== 'tabs';
+  tabsEl.innerHTML = `<button class="tab${all ? ' on' : ''}" data-tab="all" role="tab" aria-selected="${all}">All</button>` +
+    visibleCats().map(c => {
+      const on = !all && c.id === ui.tab, n = needIn(c.id);
+      return `<button class="tab${on ? ' on' : ''}" data-tab="${c.id}" role="tab" aria-selected="${on}">${esc(c.name)}<span class="n">${n || ''}</span></button>`;
     }).join('') + (ui.store === 'all' ? `<button class="tab" data-tabadd aria-label="New category" title="New category">${I.plus}</button>` : '');
+  const on = tabsEl.querySelector('.on');
+  if (on) {
+    const l = on.offsetLeft, rr = l + on.offsetWidth;
+    if (l < tabsEl.scrollLeft + 10) tabsEl.scrollLeft = l - 24;
+    else if (rr > tabsEl.scrollLeft + tabsEl.clientWidth - 10) tabsEl.scrollLeft = rr - tabsEl.clientWidth + 24;
   }
-  if (tabs) {
-    const on = tabsEl.querySelector('.on');
-    if (on) {
-      const l = on.offsetLeft, r = l + on.offsetWidth;
-      if (l < tabsEl.scrollLeft + 10) tabsEl.scrollLeft = l - 24;
-      else if (r > tabsEl.scrollLeft + tabsEl.clientWidth - 10) tabsEl.scrollLeft = r - tabsEl.clientWidth + 24;
-    }
-  }
-  viewBtn.innerHTML = tabs ? I.list : I.tabs;
-  const vl = tabs ? 'Show everything in one list' : 'Show as tabs';
-  viewBtn.setAttribute('aria-label', vl); viewBtn.title = vl;
 }
 
 const tidy = v => String(v).replace(/\s+/g, ' ').trim();
 function rowHTML(it) {
-  const here = byWhere() ? ui.wtab : ui.store;
-  const tags = it.stores.filter(s => s !== ui.store && s !== here).map(store).filter(Boolean)
+  const tags = it.stores.filter(s => s !== ui.store).map(store).filter(Boolean)
     .map(s => `<span class="tag" style="--c:var(--st${s.color})">${esc(s.name)}</span>`).join('') +
-    (it.once && here !== 'once' ? '<span class="tag once">One-off</span>' : '');
+    (it.once ? '<span class="tag once">One-off</span>' : '');
   const check = `<button class="check" data-act="check" role="checkbox" aria-checked="${it.done}" aria-label="${it.done ? 'Put back on list' : 'Check off'}: ${esc(it.name)}">${BOX}</button>`;
   const grip = `<span class="grip" data-grip="item" aria-hidden="true">${I.grip}</span>`;
   const kebab = `<button class="icon-btn kebab" data-act="opts" aria-label="Options for ${esc(it.name)}" aria-expanded="${ui.opts === it.id}" title="Stores, one-off, move, delete">${I.dots}</button>`;
@@ -521,9 +484,9 @@ function lineHTML(c) {
   return `<div class="item line-row new" data-line>${'<span class="grip" aria-hidden="true"></span>'}<span class="check" aria-hidden="true"><span class="box"></span></span><form class="line-form" data-lineform><input class="line-in" id="line-in" placeholder="New item" aria-label="New item in ${esc(c.name)}" enterkeyhint="next" autocomplete="off" autocapitalize="sentences"></form></div>`;
 }
 
-// mode: 'list' (full list), 'solo' (one category tab), 'sub' (a category inside a store tab)
-function catHTML(c, mode, extra) {
-  const ok = i => i.cat === c.id && visible(i) && (!extra || extra(i));
+// mode: 'list' (the All tab) or 'solo' (a category's own tab)
+function catHTML(c, mode) {
+  const ok = i => i.cat === c.id && visible(i);
   const solo = mode !== 'list';
   const need = state.items.filter(i => ok(i) && !i.done);
   const done = state.items.filter(i => ok(i) && i.done).sort((a, b) => b.doneAt - a.doneAt);
@@ -541,7 +504,7 @@ function catHTML(c, mode, extra) {
   const head = renaming
     ? `<input class="cname-in" id="rename-${c.id}" value="${esc(c.name)}" aria-label="Category name" enterkeyhint="done" autocomplete="off"><button class="icon-btn danger" data-act="del-cat" aria-label="Delete ${esc(c.name)}" title="Delete category">${I.trash}</button><button class="btn primary" data-act="rename-done">Done</button>`
     : `<button class="cname" data-act="rename" title="Rename">${esc(c.name)}</button>${need.length ? `<span class="count">${need.length}</span>` : ''}<span class="sp"></span>` +
-      (solo ? '' : `<button class="icon-btn" data-act="focus" aria-label="Open ${esc(c.name)} as a tab" title="Focus on this category">${I.focus}</button><button class="icon-btn fold" data-act="fold" aria-expanded="${!folded}" aria-label="${folded ? 'Expand' : 'Collapse'} ${esc(c.name)}">${I.chev}</button>`);
+      (solo ? '' : `<button class="icon-btn fold" data-act="fold" aria-expanded="${!folded}" aria-label="${folded ? 'Expand' : 'Collapse'} ${esc(c.name)}">${I.chev}</button>`);
   return `<section class="cat${folded ? ' folded' : ''}${mode === 'solo' ? ' solo' : ''}" data-cat="${c.id}">
     <div class="cat-h${renaming ? ' renaming' : ''}">${solo ? '' : `<span class="grip" data-grip="cat" aria-hidden="true">${I.grip}</span>`}${head}</div>
     <div class="cat-b">
@@ -559,20 +522,13 @@ function tipsHTML() {
       <li>Tap <b>+ Add item</b> and just type. Enter starts the next line. Paste a whole list (even from Keep) to add it all.</li>
       <li>Type <b>gar</b> in the bar above. Garlic is checked off but shows up. Tap it to add it back.</li>
       <li>Tap <b>Aldi</b> to see what you can buy there. Items you add there are marked Aldi.</li>
-      <li>Hold an item, or its handle, to drag it anywhere. Its <b>⋮</b> button has stores, one-off, move and delete.</li>
-      <li>Tabs button (top right): one category or one store at a time. Swipe between them.</li>
+      <li>Hold an item, or its handle, to drag it anywhere, even onto a category tab or a store. Its <b>⋮</b> button has the rest.</li>
+      <li>Tap a category tab to see just that category, or <b>All</b> for everything. Swipe sideways to switch.</li>
     </ul>
     ${state.sample ? `<p class="tips-f">For your own list: menu (three dots), Clear everything.</p>` : ''}
   </aside>`;
 }
 
-function groupEmptyHTML(g) {
-  const s = store(g);
-  const body = g === 'once' ? `One-offs are removed when you check them off, so they don't clutter your history. Add one from the bar ("Add as a one-off"), or drag an item onto this tab.`
-    : g === 'any' ? `Items not tied to a store show up here. Drag an item onto this tab to make it buyable anywhere.`
-    : `Items marked ${esc(s ? s.name : '')} show up here. Anything you add on this tab is marked ${esc(s ? s.name : '')}.`;
-  return `<div class="empty"><p class="empty-h">Nothing here yet</p><p>${body}</p></div>`;
-}
 function emptyHTML() {
   if (ui.store !== 'all') {
     const s = store(ui.store);
@@ -584,11 +540,7 @@ function emptyHTML() {
 
 function renderList() {
   let h = ui.hint ? tipsHTML() : '';
-  if (byWhere()) {
-    const g = ui.wtab, f = i => inGroup(i, g);
-    const secs = state.cats.filter(c => state.items.some(i => i.cat === c.id && visible(i) && f(i))).map(c => catHTML(c, 'sub', f)).join('');
-    h += secs ? `<div id="cats">${secs}</div>` : groupEmptyHTML(g);
-  } else if (ui.view === 'tabs') {
+  if (ui.view === 'tabs') {
     const c = cat(ui.tab);
     h += c ? `<div id="cats">${catHTML(c, 'solo')}</div>` : emptyHTML();
   } else {
@@ -665,17 +617,12 @@ function ago(t) {
   return Math.round(d / 30) + ' months ago';
 }
 function defaultCat() {
-  if (ui.view === 'tabs' && ui.tabsBy !== 'where' && cat(ui.tab)) return ui.tab;
+  if (ui.view === 'tabs' && cat(ui.tab)) return ui.tab;
   if (cat(ui.lastCat)) return ui.lastCat;
   return state.cats[0] ? state.cats[0].id : null;
 }
-// Where a new item is bought: the store tab or store view you're in, otherwise anywhere.
+// Where a new item is bought: the store you're viewing, otherwise anywhere.
 function addTarget() {
-  if (byWhere()) {
-    if (ui.wtab === 'once') return {stores: ui.store !== 'all' ? [ui.store] : [], once: true};
-    if (store(ui.wtab)) return {stores: [ui.wtab], once: false};
-    return {stores: [], once: false};
-  }
   return {stores: ui.store !== 'all' ? [ui.store] : [], once: false};
 }
 function newWhere(pq, forceOnce) {
@@ -781,8 +728,7 @@ function jumpTo(id) {
   if (!it) return;
   closeSearch(true);
   if (!visible(it)) { ui.store = 'all'; ui.only = false; }
-  if (byWhere()) ui.wtab = groupOf(it);
-  else if (ui.view === 'tabs') ui.tab = it.cat;
+  if (ui.view === 'tabs') ui.tab = it.cat;
   else ui.collapsed[it.cat] = false;
   if (it.done) ui.openDone[it.cat] = true;
   render();
@@ -865,7 +811,7 @@ function addFromLine(L, text, done) {
   insertAt(it, L.cat, done ? null : L.after);
   return {item: it};
 }
-function shownHere(it) { return visible(it) && (!byWhere() || inGroup(it, ui.wtab)); }
+function shownHere(it) { return visible(it); }
 function whereName(it) { return it.once ? 'one-off' : it.stores.length ? it.stores.map(id => store(id).name).join(', ') : 'anywhere'; }
 function startLine(cid) {
   finishRename(true);
@@ -1040,7 +986,7 @@ function addCat() {
   else state.cats.push(c);
   if (ui.store !== 'all') { ui.store = 'all'; ui.only = false; }
   ui.renaming = c.id;
-  if (ui.view === 'tabs') { ui.tabsBy = 'cat'; ui.tab = c.id; }
+  if (ui.view === 'tabs') ui.tab = c.id;
   commit();
   const sec = listEl.querySelector(`.cat[data-cat="${c.id}"]`);
   if (sec) scrollToEl(sec, false);
@@ -1056,19 +1002,16 @@ function deleteCat(cid) {
   commit();
   note(`Deleted ${c.name}` + (n ? ` and its ${n} item${n > 1 ? 's' : ''}` : ''), 'Undo', () => restore(snap));
 }
-function switchTab(dir) {
-  if (byWhere()) {
-    const vg = visibleGroups(), n = vg[vg.findIndex(g => g.id === ui.wtab) + dir];
-    if (!n) return;
-    ui.wtab = n.id;
-  } else {
-    const vc = visibleCats(), n = vc[vc.findIndex(c => c.id === ui.tab) + dir];
-    if (!n) return;
-    ui.tab = n.id;
-  }
+function showTab(id, dir) {
+  if (id === 'all') ui.view = 'list'; else { ui.view = 'tabs'; ui.tab = id; }
   slideDir = dir;
   render();
   listEl.scrollTop = 0;
+}
+function switchTab(dir) {
+  const seq = ['all'].concat(visibleCats().map(c => c.id));
+  const n = seq[seq.indexOf(ui.view === 'tabs' ? ui.tab : 'all') + dir];
+  if (n) showTab(n, dir);
 }
 
 listEl.addEventListener('click', e => {
@@ -1107,7 +1050,6 @@ listEl.addEventListener('click', e => {
     case 'rename-done': finishRename(true); break;
     case 'del-cat': deleteCat(cid); break;
     case 'fold': ui.collapsed[cid] = !ui.collapsed[cid]; render(); break;
-    case 'focus': ui.view = 'tabs'; ui.tabsBy = 'cat'; ui.tab = cid; render(); listEl.scrollTop = 0; break;
     case 'done': ui.openDone[cid] = !ui.openDone[cid]; render(); break;
     case 'add-cat': addCat(); break;
     case 'tips-x': ui.hint = false; render(); break;
@@ -1199,33 +1141,15 @@ storebarEl.addEventListener('keydown', e => {
   else if (e.key === 'Escape') finishStoreEdit(false);
 });
 
-/* ---------- tabs + view ---------- */
+/* ---------- tabs ---------- */
 tabsEl.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
   if (b.hasAttribute('data-tabadd')) return addCat();
-  if (b.dataset.wtab) {
-    if (b.dataset.wtab === ui.wtab) return;
-    const vg = visibleGroups();
-    slideDir = Math.sign(vg.findIndex(g => g.id === b.dataset.wtab) - vg.findIndex(g => g.id === ui.wtab));
-    ui.wtab = b.dataset.wtab; render(); listEl.scrollTop = 0;
-    return;
-  }
-  const id = b.dataset.tab;
-  if (!id || id === ui.tab) return;
-  const vc = visibleCats();
-  slideDir = Math.sign(vc.findIndex(c => c.id === id) - vc.findIndex(c => c.id === ui.tab));
-  ui.tab = id; render(); listEl.scrollTop = 0;
-});
-segEl.addEventListener('click', e => {
-  const b = e.target.closest('[data-by]');
-  if (!b || b.dataset.by === ui.tabsBy) return;
-  ui.tabsBy = b.dataset.by; render(); listEl.scrollTop = 0;
-});
-viewBtn.addEventListener('click', () => {
-  ui.view = ui.view === 'tabs' ? 'list' : 'tabs';
-  if (ui.view === 'tabs' && !cat(ui.tab)) ui.tab = defaultCat();
-  render(); listEl.scrollTop = 0;
+  const id = b.dataset.tab, cur = ui.view === 'tabs' ? ui.tab : 'all';
+  if (!id || id === cur) return;
+  const seq = ['all'].concat(visibleCats().map(c => c.id));
+  showTab(id, Math.sign(seq.indexOf(id) - seq.indexOf(cur)));
 });
 
 /* ---------- menu, backup, snackbar ---------- */
@@ -1334,7 +1258,7 @@ function startItemDrag(row, x, y, pid) {
   const ph = document.createElement('div');
   ph.className = 'ph'; ph.style.height = r.height + 'px';
   row.after(ph); row.classList.add('src');
-  drag = {kind: 'item', id: it.id, ghost, ph, pid, oy: y - r.top, x, y, tab: null, foldCat: null, from: it.cat};
+  drag = {kind: 'item', id: it.id, ghost, ph, pid, oy: y - r.top, x, y, tab: null, store: null, foldCat: null, from: it.cat, snap: snapshot()};
   document.body.classList.add('dragging');
   buzz();
   moveDrag(x, y);
@@ -1364,17 +1288,17 @@ function moveDrag(x, y) {
   drag.x = x; drag.y = y;
   drag.ghost.style.top = (y - drag.oy) + 'px';
   if (drag.kind === 'item') itemTarget(x, y); else catTarget(x, y);
+  // Fade the dragged item while it hovers a tab or store, so the highlighted target stays visible.
+  drag.ghost.classList.toggle('over', !!(drag.tab || drag.store));
 }
 function itemTarget(x, y) {
   const el = document.elementFromPoint(x, y);
-  clearDrop(); drag.tab = null; drag.wtab = null; drag.foldCat = null;
+  clearDrop(); drag.tab = null; drag.store = null; drag.foldCat = null;
   if (!el) return;
-  const tab = el.closest('.tab[data-tab], .tab[data-wtab]');
-  if (tab) {
-    tab.classList.add('drop');
-    if (tab.dataset.wtab) drag.wtab = tab.dataset.wtab; else drag.tab = tab.dataset.tab;
-    return;
-  }
+  const tab = el.closest('.tab[data-tab]');
+  if (tab) { if (tab.dataset.tab !== 'all') { tab.classList.add('drop'); drag.tab = tab.dataset.tab; } return; }
+  const chip = el.closest('.chip[data-store]');
+  if (chip) { if (chip.dataset.store !== 'all') { chip.classList.add('drop'); drag.store = chip.dataset.store; } return; }
   if (!listEl.contains(el) || el.closest('.ph')) return;
   const row = el.closest('.item');
   if (row && row.parentElement && row.parentElement.dataset.zone) {
@@ -1405,7 +1329,7 @@ function tick() {
   if (!drag) return;
   const r = listEl.getBoundingClientRect(), E = 60;
   let v = 0;
-  if (!drag.tab && !drag.wtab) {
+  if (!drag.tab && !drag.store) {
     if (drag.y < r.top + E && drag.y > r.top - 30) v = -Math.min(16, (r.top + E - drag.y) / 3);
     else if (drag.y > r.bottom - E) v = Math.min(16, (drag.y - (r.bottom - E)) / 3);
   }
@@ -1425,12 +1349,10 @@ function dropItem() {
   const it = item(drag.id);
   if (!it) return false;
   let cid, done, beforeId = null, afterId = null;
-  if (drag.wtab) {
-    // Dropping on a store tab changes where it's bought, not its place in the list.
-    const g = drag.wtab;
-    if (g === ui.wtab) return false;
-    if (g === 'once') it.once = true;
-    else { it.once = false; it.stores = g === 'any' ? [] : [g]; }
+  if (drag.store) {
+    // Dropping on a store chip marks where it's bought, not its place in the list.
+    if (it.stores.length === 1 && it.stores[0] === drag.store) return false;
+    it.stores = [drag.store];
     return true;
   }
   if (drag.tab) {
@@ -1481,10 +1403,7 @@ function endDrag() {
     ok = dropItem();
     if (ok && d.tab && d.tab !== d.from) moved = `Moved ${item(d.id).name} to ${cat(d.tab).name}`;
     if (ok && d.foldCat && d.foldCat !== d.from) moved = `Moved ${item(d.id).name} to ${cat(d.foldCat).name}`;
-    if (ok && d.wtab) {
-      const nm = item(d.id).name;
-      moved = d.wtab === 'once' ? `${nm} is now a one-off` : d.wtab === 'any' ? `${nm} can now be bought anywhere` : `${nm} is now marked ${store(d.wtab).name} only`;
-    }
+    if (ok && d.store) moved = `${item(d.id).name} is now marked ${store(d.store).name} only`;
   } else ok = dropCat();
   d.ghost.remove(); d.ph.remove(); clearDrop();
   listEl.classList.remove('sorting');
@@ -1496,7 +1415,7 @@ function endDrag() {
     const sec = listEl.querySelector(`.cat[data-cat="${d.id}"]`);
     if (sec) listEl.scrollTop += sec.getBoundingClientRect().top - (d.y - d.oy);
   }
-  if (moved) note(moved);
+  if (moved) note(moved, 'Undo', () => restore(d.snap));
 }
 
 listEl.addEventListener('pointerdown', e => {
@@ -1505,7 +1424,7 @@ listEl.addEventListener('pointerdown', e => {
   // Closing an open editor re-renders the list, so find what is under the finger now.
   const t = e.target.isConnected ? e.target : document.elementFromPoint(e.clientX, e.clientY);
   if (!t || !listEl.contains(t)) return;
-  if (ui.view === 'tabs' && e.pointerType !== 'mouse') sw = {x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId};
+  if (e.pointerType !== 'mouse') sw = {x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId};
   const grip = t.closest('[data-grip]');
   if (grip) {
     e.preventDefault();

@@ -1,4 +1,4 @@
-# Aisle: grocery list design (v0.3)
+# Aisle: grocery list design (v0.4)
 
 Working name. A compact, Keep-style list built around three fixes:
 
@@ -17,22 +17,23 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 | **Category** | Your own groups, in your own order. Drag to reorder. Rename by tapping the name. |
 | **Store** | A tag on an item. No tag = **Anywhere** (bananas). One or more tags = only those stores (paper towels → Costco). |
 | **Store view** | Tap a store chip: that store's items **plus** anywhere items. Switch on "Hide items I can buy anywhere" to get a dedicated Costco-only list. |
-| **Tabs (focus mode)** | Two ways to split the list into tabs: **Category** (one category per tab) or **Store** (Anywhere · Costco · Aldi · Walmart · One-offs). Swipe sideways between tabs. Store tabs show only items marked for that store, grouped by category. |
+| **Category tabs** | Always visible under the store chips: **All · Produce · Dairy · … · +**. *All* is the whole list; a category tab shows just that category. Tap or swipe sideways to switch. Inside a store view, only categories with something for that store get a tab. |
 
 ## Screen
 
 ```
 ┌──────────────────────────────────────┐
-│ [🔍 Add or find an item     ] [▭] [⋮]│  find-or-add bar · tabs/list switch · menu
+│ [🔍 Add or find an item         ] [⋮]│  find-or-add bar · menu
 │ (All 22) (●Costco 15) (●Aldi 15) (+) │  store chips with "to buy" counts
 │  ○ Hide items I can buy anywhere  ✎  │  only when a store is selected
+│  All  Produce 5  Dairy 3  Meat 2  …  │  category tabs (swipe or tap)
 ├──────────────────────────────────────┤
-│ ⠿ Produce  5                   ⤢  ⌄ │  handle · name · count · focus · fold
+│ ⠿ Produce  5                      ⌄ │  handle · name · count · fold
 │ ⠿ ☐ Bananas                        ⋮ │  ⋮ = this item's options
 │ ⠿ ☐ Avocados        Costco  Aldi   ⋮ │  store tags (blank = anywhere)
 │   ┆ New item_                        │  writing line: type, Enter, type…
 │     ✓ 4 checked off ›                │  tucked away, one tap to open
-│ ⠿ Dairy & eggs  3              ⤢  ⌄ │
+│ ⠿ Dairy & eggs  3                 ⌄ │
 │   …                                  │
 │ [ + New category ]                   │
 └──────────────────────────────────────┘
@@ -44,8 +45,8 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 |---|---|
 | Check off / put back | Tap the box |
 | Move an item (any category) | Hold the item, or drag its ⠿ handle |
-| Move an item to another category (tabs) | Drag it onto a category tab |
-| Change where it's bought (tabs) | Drag it onto a store tab: Anywhere, a store (that store only), or One-offs |
+| Move an item to another category | Drag it onto that category's tab (or into the category) |
+| Mark where it's bought | Drag it onto a store chip (makes it that store only; Undo available) |
 | Un-check by moving | Drag a checked-off item up into the list |
 | Add items | Tap **+ Add item** under a category and type. Enter = next line |
 | Rename an item | Tap its name and type, like editing a note. Enter = new line below it |
@@ -65,7 +66,7 @@ Adding should feel like writing on paper:
 - **Backspace on an empty line** jumps back up to the previous item to fix it.
 - Writing a name that's already on file (say "Garlic", checked off last week) puts that item back on the list instead of making a duplicate.
 - **Paste a list** (from Keep, a note, a text) and every line becomes an item. Bullets and checkboxes are cleaned up. Ticked lines (☑, [x]) come in as checked off.
-- New lines follow the same store rule as everything else: Anywhere on the main list, the store's tag inside a store view or store tab.
+- New lines follow the same store rule as everything else: Anywhere on the main list, the store's tag inside a store view.
 
 ## The find-or-add bar
 
@@ -80,7 +81,7 @@ One box does both jobs:
 
 ## Decisions I made (easy to change)
 
-- **Where new items go:** on the main list (All), new items are **Anywhere**. Inside a store (the Costco chip, or the Costco store tab), they're marked **Costco**. The add row always shows this before you add, and you can change it later from the item's ⋮ menu.
+- **Where new items go:** on the main list (All), new items are **Anywhere**. Inside a store (the Costco chip selected), they're marked **Costco**. The add row always shows this before you add, and you can change it later from the item's ⋮ menu.
 - Checked-off items sort most recent first.
 - Empty categories are hidden inside store views (less clutter), shown in All.
 - In the prototype the bar is at the top so the phone keyboard can't cover it. The Android app can dock it at the bottom for thumbs.
@@ -104,4 +105,4 @@ Prices, quantity fields (type "x2" in the name), sharing between people, multipl
 
 1. Next step: go straight to the native Android app, or first make this an installable web app on your phone?
 
-Settled: tabs can be split by category or by store/one-off (v0.2); items added in a store view are marked for that store (v0.2); adding works like writing, and item options live behind ⋮ (v0.3). Other input styles can be trialed later.
+Settled: tabs are categories only and always visible, stores stay as chips (v0.4); items added in a store view are marked for that store (v0.2); adding works like writing, and item options live behind ⋮ (v0.3). Other input styles can be trialed later.
