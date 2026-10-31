@@ -1,4 +1,4 @@
-# Aisle: grocery list design (v0.4)
+# Aisle: grocery list design (v0.5)
 
 Working name. A compact, Keep-style list built around three fixes:
 
@@ -17,6 +17,7 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 | **Category** | Your own groups, in your own order. Drag to reorder. Rename by tapping the name. |
 | **Store** | A tag on an item. No tag = **Anywhere** (bananas). One or more tags = only those stores (paper towels → Costco). |
 | **Store view** | Tap a store chip: that store's items **plus** anywhere items. Switch on "Hide items I can buy anywhere" to get a dedicated Costco-only list. |
+| **Store aisle order** | Each store can order the categories its own way (Costco: household first, frozen last). Set it by selecting the store and dragging categories. The main list (All) keeps its own order; a store without one follows the main order. |
 | **Category tabs** | Always visible under the store chips: **All · Produce · Dairy · … · +**. *All* is the whole list; a category tab shows just that category. Tap or swipe sideways to switch. Inside a store view, only categories with something for that store get a tab. |
 
 ## Screen
@@ -52,7 +53,8 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 | Rename an item | Tap its name and type, like editing a note. Enter = new line below it |
 | Erase an item while writing | Clear its text and press Backspace once more (Undo available) |
 | Choose stores, make it a one-off, move it, delete | The item's **⋮** button |
-| Reorder categories | Drag a category's ⠿ (everything folds to headers while you drag) |
+| Reorder categories | Drag a category's ⠿ (everything folds to headers while you drag). On All this sets the main order |
+| Set a store's aisle order | Select the store, then drag categories. Undo it from the store's pencil → "Use main order" |
 | Rename / delete category | Tap its name |
 | Add / rename / delete store | `+ Store` chip; pencil next to the store toggle |
 | Undo a delete | "Undo" on the message at the bottom; no confirm dialogs |
