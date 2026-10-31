@@ -82,7 +82,20 @@ In order of effort:
 3. **Connect any AI (MCP).** "MCP" is a standard plug that lets AI assistants (Claude, ChatGPT and others) use an app. Tell any assistant "add the ingredients for this recipe to my grocery list" and it does.
    - What the AI can do: add items (with store and lookout options), read the current list, and check things off.
    - Same rules as typing: names already on file come back instead of being duplicated.
-   - ⚠️ **Tradeoff:** an AI can only reach your list if the list lives online somewhere. DESIGN.md currently says "nothing leaves the phone." See open question 1.
+   - Needs the list stored online. **Decided: yes** (see Hosting).
+
+## Hosting (decided: online)
+
+**Recommendation: Cloudflare** (Workers for the app's server, D1 for the database).
+- Free at personal scale, and it doesn't go to sleep when unused.
+- Has ready-made templates for MCP servers with login built in, so AI connections are a supported path, not a custom job.
+- The phone app keeps a local copy, so the list still works in a store with bad signal and syncs when back online.
+
+Runner-up: **Supabase**. It has a friendlier spreadsheet-like view of your data, but free projects pause after a week of no use.
+
+**Moving over from Google Keep:** Keep has no public way for apps to read personal notes. Two easy routes:
+1. Copy a Keep list and paste it into Aisle (already works; checked items stay checked).
+2. For everything at once: export via Google Takeout and import that file (small extra feature).
 
 ## Changes to the data
 
@@ -94,7 +107,7 @@ Each item gains:
 
 ## Build order
 
-1. Lookout items and the 90-day fade (small, useful right away).
+1. Lookout items ✅ (in the prototype) and the 90-day fade.
 2. Comma splitting for dictation and pasting.
 3. Start recording purchase dates **now**, even before suggestions exist, so there's history to learn from.
 4. Suggested draft list.
@@ -102,5 +115,5 @@ Each item gains:
 
 ## Open questions
 
-1. **Online or phone-only?** MCP needs the list stored online (a small private server synced to the phone). Upside: AI access, plus phone ↔ computer and sharing later. Downside: more to build and run, and your list leaves the phone. *My recommendation:* stay phone-only for the first Android version and add online sync together with MCP as step 5.
+1. ~~Online or phone-only?~~ Online (Cloudflare).
 2. Should lookout items get a gentle nudge when you open a store view ("You're looking for Calabrian chili paste")? Or is the folded section enough?

@@ -1,4 +1,4 @@
-# Aisle: grocery list design (v0.3)
+# Aisle: grocery list design (v0.4)
 
 Working name. A compact, Keep-style list built around three fixes:
 
@@ -14,6 +14,7 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 |---|---|
 | **Item** | Free text ("Eggs, 24 pack"). Belongs to one category. Either *on the list* or *checked off*. Never "used up": checked-off items wait in their category until you need them again. |
 | **One-off item** | Something you'll buy once ("Birthday candles"). Removed when you check it off (with Undo), so it never clutters your history or search. |
+| **Lookout item** | Something you're hunting for and might not find ("Calabrian chili paste"). Lives in a folded **👀 Keep an eye out** section at the bottom, not in the to-buy counts. Its stores mean *maybe at*: a store view only shows lookout items that might be there (or could be anywhere). Optional note ("only if under $8"). Check it off when you find it; inside a store view the app offers to remember that store. |
 | **Category** | Your own groups, in your own order. Drag to reorder. Rename by tapping the name. |
 | **Store** | A tag on an item. No tag = **Anywhere** (bananas). One or more tags = only those stores (paper towels → Costco). |
 | **Store view** | Tap a store chip: that store's items **plus** anywhere items. Switch on "Hide items I can buy anywhere" to get a dedicated Costco-only list. |
@@ -50,7 +51,8 @@ Clickable prototype: `prototype/aisle.html` (published as a private Claude artif
 | Add items | Tap **+ Add item** under a category and type. Enter = next line |
 | Rename an item | Tap its name and type, like editing a note. Enter = new line below it |
 | Erase an item while writing | Clear its text and press Backspace once more (Undo available) |
-| Choose stores, make it a one-off, move it, delete | The item's **⋮** button |
+| Choose stores, make it a one-off or a lookout item, move it, delete | The item's **⋮** button |
+| Start or stop keeping an eye out | Drag an item into or out of **👀 Keep an eye out** |
 | Reorder categories | Drag a category's ⠿ (everything folds to headers while you drag) |
 | Rename / delete category | Tap its name |
 | Add / rename / delete store | `+ Store` chip; pencil next to the store toggle |
@@ -75,7 +77,8 @@ One box does both jobs:
 - **Typing:** instantly matches every item, on the list or checked off, with its category, stores and when you last checked it off. Tap → it's back on the list. Typos are forgiven ("chkn" finds "Chicken thighs").
 - **New name + Enter:** adds it. The row shows where it will go ("to Produce"); category chips underneath let you pick another with one tap.
 - **Add as a one-off:** a second row under "Add …", one tap.
-- **Shortcuts while typing:** `@costco` marks a store, `@anywhere` clears stores, `@once` makes a one-off.
+- **Keep an eye out for it:** a third row, one tap.
+- **Shortcuts while typing:** `@costco` marks a store, `@anywhere` clears stores, `@once` makes a one-off, `@lookout` keeps an eye out.
 - The keyboard stays open, so you can add five things in a row. Pasting a multi-line list here works too.
 
 ## Decisions I made (easy to change)
@@ -89,7 +92,7 @@ One box does both jobs:
 
 Prices, quantity fields (type "x2" in the name), sharing between people, multiple master lists, auto-sorting into categories, barcode scanning.
 
-## Saving
+## Saving (being replaced: see SPEC.md, Hosting)
 
 - **Prototype:** saved in the browser, and privately to your Claude account when opened on claude.ai (follows you between phone and computer). Menu → *Copy backup* gives you a text copy.
 - **Android app:** an on-device database. No account, no internet, nothing leaves the phone. Keeps *Copy backup / Restore* so you can move phones.
@@ -104,4 +107,4 @@ Prices, quantity fields (type "x2" in the name), sharing between people, multipl
 
 1. Next step: go straight to the native Android app, or first make this an installable web app on your phone?
 
-Settled: tabs can be split by category or by store/one-off (v0.2); items added in a store view are marked for that store (v0.2); adding works like writing, and item options live behind ⋮ (v0.3). Other input styles can be trialed later.
+Settled: lookout items in a folded section, stores meaning "maybe at" (v0.4). Tabs can be split by category or by store/one-off (v0.2); items added in a store view are marked for that store (v0.2); adding works like writing, and item options live behind ⋮ (v0.3). Other input styles can be trialed later.

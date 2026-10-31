@@ -162,6 +162,18 @@ body.dragging,body.dragging *{cursor:grabbing!important}
 .sorting .cat-b,.sorting .tips,.sorting .add-cat{display:none}
 .sorting .cat-h{position:static}
 
+.look{margin-top:14px;border-top:1px dashed var(--line);padding-top:4px}
+.look-t{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:0 4px;border:0;border-radius:10px;background:none;color:var(--ink);font:700 17px/1.15 var(--f-head);text-align:left}
+.look-t .eye{font-size:16px}
+.look-t .sub{flex:1;min-width:0;font:13px var(--f-ui);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.look-t .chev{display:grid;color:var(--muted);transition:transform .15s;transform:rotate(-90deg)}
+.look-t[aria-expanded="true"] .chev{transform:none}
+.look.drop .look-t{background:var(--accent-soft)}
+.look .box{border-style:dotted}
+.lnote{display:block;margin-top:2px;font-size:12.5px;color:var(--muted)}
+.note-in{flex:1;min-width:140px;height:32px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:var(--bg);color:var(--ink);font:15px var(--f-ui);outline:0}
+.note-in:focus{border-color:var(--accent)}
+.tag.look{color:var(--muted);background:none;box-shadow:inset 0 0 0 1px var(--line)}
 .add-cat{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:10px;border:1px dashed var(--line);border-radius:12px;background:none;color:var(--muted);font:700 14px var(--f-ui)}
 .tips{margin:10px 0 4px;padding:8px 6px 10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;font-size:13.5px;line-height:1.35}
 .tips-h{display:flex;align-items:center;gap:8px}
@@ -288,13 +300,13 @@ function sample() {
   const now = Date.now(), H = 3600e3;
   const stores = [{id:'costco', name:'Costco', color:0}, {id:'aldi', name:'Aldi', color:1}, {id:'walmart', name:'Walmart', color:2}];
   const spec = [
-    ['Produce', ['Bananas', 'Avocados|costco aldi', 'Baby spinach', 'Lemons', 'Cilantro', '-Strawberries|costco', '-Garlic', '-Yellow onions', '-Sweet potatoes|aldi']],
+    ['Produce', ['?Ramps#spring only, farmers market', 'Bananas', 'Avocados|costco aldi', 'Baby spinach', 'Lemons', 'Cilantro', '-Strawberries|costco', '-Garlic', '-Yellow onions', '-Sweet potatoes|aldi']],
     ['Dairy & eggs', ['Eggs, 24 pack|costco', 'Greek yogurt|aldi', 'Oat milk', '-Butter', '-Shredded mozzarella|aldi', '-Sharp cheddar']],
     ['Meat & fish', ['Chicken thighs|costco', 'Ground turkey|aldi', '-Salmon fillets|costco', '-Bacon']],
     ['Bakery', ['Sourdough loaf', '!Birthday candles|walmart', '-Tortillas|walmart', '-Bagels']],
-    ['Pantry', ['Olive oil|costco', 'Pasta|aldi', 'Peanut butter', 'Coffee beans|costco', '!Saffron (paella night)', '-Jasmine rice|costco', '-Canned tomatoes', '-Black beans', '-Maple syrup|costco']],
+    ['Pantry', ['Olive oil|costco', 'Pasta|aldi', 'Peanut butter', 'Coffee beans|costco', '!Saffron (paella night)', '?Calabrian chili paste|aldi walmart#only if under $8', '-Jasmine rice|costco', '-Canned tomatoes', '-Black beans', '-Maple syrup|costco']],
     ['Frozen', ['Frozen berries|costco', '-Frozen peas', '-Ice cream']],
-    ['Household', ['Paper towels|costco', 'Dish soap|walmart', '-Trash bags|costco walmart', '-Light bulbs|walmart', '-Laundry pods|costco']],
+    ['Household', ['Paper towels|costco', 'Dish soap|walmart', '-Trash bags|costco walmart', '-Light bulbs|walmart', '-Laundry pods|costco', '?Brita filters, 6 pack|costco walmart']],
     ['Snacks', ['Tortilla chips|aldi', 'Dark chocolate|aldi', '-Almonds|costco']]
   ];
   const cats = [], items = [];
@@ -303,11 +315,12 @@ function sample() {
     const c = {id: uid(), name: cname};
     cats.push(c);
     for (let s of rows) {
-      const done = s[0] === '-', once = s[0] === '!';
-      if (done || once) s = s.slice(1);
-      const [name, st] = s.split('|');
+      const done = s[0] === '-', once = s[0] === '!', look = s[0] === '?';
+      if (done || once || look) s = s.slice(1);
+      const [main, lookNote] = s.split('#');
+      const [name, st] = main.split('|');
       k++;
-      items.push({id: uid(), name, cat: c.id, stores: st ? st.split(' ') : [], once, done, doneAt: done ? now - k * 5 * H : 0, addedAt: now - 30 * 24 * H});
+      items.push({id: uid(), name, cat: c.id, stores: st ? st.split(' ') : [], once, look, lookNote: lookNote || '', done, doneAt: done ? now - k * 5 * H : 0, addedAt: now - 30 * 24 * H});
     }
   }
   return {v: 1, savedAt: 0, sample: true, stores, cats, items};
@@ -322,19 +335,19 @@ function clean(s) {
   const items = s.items.filter(i => i && i.id && i.name && cids.has(String(i.cat))).map(i => ({
     id: String(i.id), name: String(i.name), cat: String(i.cat),
     stores: (Array.isArray(i.stores) ? i.stores : []).map(String).filter(x => sids.has(x)),
-    once: !!i.once, done: !!i.done, doneAt: +i.doneAt || 0, addedAt: +i.addedAt || 0
+    once: !!i.once, look: !!i.look && !i.done, lookNote: String(i.lookNote || ''), done: !!i.done, doneAt: +i.doneAt || 0, addedAt: +i.addedAt || 0
   }));
   return {v: 1, savedAt: +s.savedAt || 0, sample: !!s.sample, stores, cats, items};
 }
 
-const UI0 = {view: 'list', tabsBy: 'cat', store: 'all', only: false, tab: null, wtab: 'any', collapsed: {}, openDone: {}, lastCat: null, hint: true};
+const UI0 = {view: 'list', tabsBy: 'cat', store: 'all', only: false, tab: null, wtab: 'any', collapsed: {}, openDone: {}, lastCat: null, hint: true, lookOpen: false};
 function loadState() { try { const r = localStorage.getItem(LS); if (r) return clean(JSON.parse(r)); } catch (e) {} return null; }
 function loadUI() { try { const r = localStorage.getItem(LSUI); if (r) return Object.assign({}, UI0, JSON.parse(r)); } catch (e) {} return Object.assign({}, UI0); }
 function saveLocal() { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} }
 function saveUI() {
   try {
-    const {view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint} = ui;
-    localStorage.setItem(LSUI, JSON.stringify({view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint}));
+    const {view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint, lookOpen} = ui;
+    localStorage.setItem(LSUI, JSON.stringify({view, tabsBy, store, only, tab, wtab, collapsed, openDone, lastCat, hint, lookOpen}));
   } catch (e) {}
 }
 
@@ -351,15 +364,22 @@ function restore(snap) { state = clean(JSON.parse(snap)); commit(); }
 
 function visibleIn(i, s, only) { return s === 'all' || i.stores.includes(s) || (!only && i.stores.length === 0); }
 const visible = i => visibleIn(i, ui.store, ui.only);
-const needIn = cid => state.items.filter(i => i.cat === cid && !i.done && visible(i)).length;
+const toBuy = i => !i.done && !i.look;
+const needIn = cid => state.items.filter(i => i.cat === cid && toBuy(i) && visible(i)).length;
 function visibleCats() {
-  return state.cats.filter(c => ui.store === 'all' || ui.renaming === c.id || state.items.some(i => i.cat === c.id && visible(i)));
+  return state.cats.filter(c => ui.store === 'all' || ui.renaming === c.id || state.items.some(i => i.cat === c.id && !i.look && visible(i)));
 }
 // "Store" tabs: Anywhere, one per store (items marked for it), and One-offs.
 function groups() {
   return [{id: 'any', name: 'Anywhere'}].concat(state.stores.map(s => ({id: s.id, name: s.name, color: s.color})), [{id: 'once', name: 'One-offs'}]);
 }
-function inGroup(i, g) { return g === 'once' ? i.once : !i.once && (g === 'any' ? i.stores.length === 0 : i.stores.includes(g)); }
+function inGroup(i, g) { return !i.look && (g === 'once' ? i.once : !i.once && (g === 'any' ? i.stores.length === 0 : i.stores.includes(g))); }
+// Lookout items: "maybe at" stores (none = could be anywhere). They show in their own folded section, not in categories or counts.
+function lookHere() {
+  return state.items.filter(i => i.look && visible(i) &&
+    (!byWhere() || (ui.wtab !== 'once' && (i.stores.length === 0 || i.stores.includes(ui.wtab)))) &&
+    (ui.view !== 'tabs' || byWhere() || i.cat === ui.tab));
+}
 function visibleGroups() { return groups().filter(g => ui.store === 'all' || state.items.some(i => inGroup(i, g.id) && visible(i))); }
 const byWhere = () => ui.view === 'tabs' && ui.tabsBy === 'where';
 function groupOf(it) { return it.once ? 'once' : it.stores.length ? (it.stores.includes(ui.store) ? ui.store : it.stores[0]) : 'any'; }
@@ -435,10 +455,10 @@ function render() {
 }
 
 function renderTop() {
-  const allN = state.items.filter(i => !i.done).length;
+  const allN = state.items.filter(toBuy).length;
   let h = `<button class="chip${ui.store === 'all' ? ' on' : ''}" data-store="all" aria-pressed="${ui.store === 'all'}">All <span class="n">${allN}</span></button>`;
   for (const s of state.stores) {
-    const n = state.items.filter(i => !i.done && visibleIn(i, s.id, false)).length;
+    const n = state.items.filter(i => toBuy(i) && visibleIn(i, s.id, false)).length;
     h += `<button class="chip${ui.store === s.id ? ' on' : ''}" data-store="${s.id}" aria-pressed="${ui.store === s.id}" style="--c:var(--st${s.color})"><i class="dot"></i>${esc(s.name)} <span class="n">${n}</span></button>`;
   }
   h += ui.addingStore
@@ -464,7 +484,7 @@ function renderTop() {
   }
   if (tabs && ui.tabsBy === 'where') {
     tabsEl.innerHTML = visibleGroups().map(g => {
-      const n = state.items.filter(i => !i.done && visible(i) && inGroup(i, g.id)).length, on = g.id === ui.wtab, st = g.color != null;
+      const n = state.items.filter(i => toBuy(i) && visible(i) && inGroup(i, g.id)).length, on = g.id === ui.wtab, st = g.color != null;
       return `<button class="tab${on ? ' on' : ''}" data-wtab="${g.id}" role="tab" aria-selected="${on}"${st ? ` style="--c:var(--st${g.color})"` : ''}>${st ? '<i class="dot"></i>' : ''}${esc(g.name)}<span class="n">${n || ''}</span></button>`;
     }).join('');
   } else if (tabs) {
@@ -491,20 +511,27 @@ function rowHTML(it) {
   const here = byWhere() ? ui.wtab : ui.store;
   const tags = it.stores.filter(s => s !== ui.store && s !== here).map(store).filter(Boolean)
     .map(s => `<span class="tag" style="--c:var(--st${s.color})">${esc(s.name)}</span>`).join('') +
-    (it.once && here !== 'once' ? '<span class="tag once">One-off</span>' : '');
+    (it.once && here !== 'once' ? '<span class="tag once">One-off</span>' : '') +
+    (it.look && !it.stores.length && here !== 'all' ? '<span class="tag look">Anywhere</span>' : '');
   const check = `<button class="check" data-act="check" role="checkbox" aria-checked="${it.done}" aria-label="${it.done ? 'Put back on list' : 'Check off'}: ${esc(it.name)}">${BOX}</button>`;
   const grip = `<span class="grip" data-grip="item" aria-hidden="true">${I.grip}</span>`;
-  const kebab = `<button class="icon-btn kebab" data-act="opts" aria-label="Options for ${esc(it.name)}" aria-expanded="${ui.opts === it.id}" title="Stores, one-off, move, delete">${I.dots}</button>`;
+  const kebab = `<button class="icon-btn kebab" data-act="opts" aria-label="Options for ${esc(it.name)}" aria-expanded="${ui.opts === it.id}" title="Stores, one-off, lookout, move, delete">${I.dots}</button>`;
   if (ui.line && ui.line.mode === 'edit' && ui.line.id === it.id) {
     return `<div class="item line-row${it.done ? ' done' : ''}" data-id="${it.id}">${grip}${check}<form class="line-form" data-lineform><input class="line-in" id="line-in" value="${esc(it.name)}" aria-label="Item name" enterkeyhint="${it.done ? 'done' : 'next'}" autocomplete="off" autocapitalize="sentences"></form>${kebab}</div>`;
   }
-  return `<div class="item${it.done ? ' done' : ''}${ui.opts === it.id ? ' has-opts' : ''}" data-id="${it.id}">${grip}${check}<span class="name" data-act="edit">${esc(it.name)}</span>${tags ? `<span class="tags">${tags}</span>` : ''}${kebab}</div>`;
+  const lnote = it.look && it.lookNote ? `<span class="lnote">${esc(it.lookNote)}</span>` : '';
+  return `<div class="item${it.done ? ' done' : ''}${ui.opts === it.id ? ' has-opts' : ''}" data-id="${it.id}">${grip}${check}<span class="name" data-act="edit">${esc(it.name)}${lnote}</span>${tags ? `<span class="tags">${tags}</span>` : ''}${kebab}</div>`;
 }
 function optsHTML(it) {
   const none = it.stores.length === 0;
   const others = state.cats.filter(c => c.id !== it.cat);
   return `<div class="opts" data-opts="${it.id}">
-    <div class="where" role="group" aria-label="Where to buy"><span class="lbl">Buy at</span>
+    <div class="where" role="group" aria-label="Status"><span class="lbl">Status</span>
+      <button class="sopt${it.look ? '' : ' on'}" data-look="0" aria-pressed="${!it.look}">Buy it</button>
+      <button class="sopt${it.look ? ' on' : ''}" data-look="1" aria-pressed="${it.look}">👀 Keep an eye out</button>
+    </div>
+    ${it.look ? `<div class="where"><input class="note-in" data-note value="${esc(it.lookNote)}" placeholder="Note, e.g. only if under $15" aria-label="Lookout note" enterkeyhint="done" autocomplete="off"></div>` : ''}
+    <div class="where" role="group" aria-label="Where to buy"><span class="lbl">${it.look ? 'Maybe at' : 'Buy at'}</span>
       <button class="sopt${none ? ' on' : ''}" data-sopt="" aria-pressed="${none}">Anywhere</button>
       ${state.stores.map(s => { const on = it.stores.includes(s.id); return `<button class="sopt${on ? ' on' : ''}" data-sopt="${s.id}" aria-pressed="${on}" style="--c:var(--st${s.color})"><i class="dot"></i>${esc(s.name)}</button>`; }).join('')}
     </div>
@@ -523,7 +550,7 @@ function lineHTML(c) {
 
 // mode: 'list' (full list), 'solo' (one category tab), 'sub' (a category inside a store tab)
 function catHTML(c, mode, extra) {
-  const ok = i => i.cat === c.id && visible(i) && (!extra || extra(i));
+  const ok = i => i.cat === c.id && !i.look && visible(i) && (!extra || extra(i));
   const solo = mode !== 'list';
   const need = state.items.filter(i => ok(i) && !i.done);
   const done = state.items.filter(i => ok(i) && i.done).sort((a, b) => b.doneAt - a.doneAt);
@@ -552,6 +579,17 @@ function catHTML(c, mode, extra) {
     </div></section>`;
 }
 
+function lookHTML() {
+  const ls = lookHere();
+  if (!ls.length) return '';
+  const open = !!ui.lookOpen;
+  const peek = open ? '' : ls.slice(0, 3).map(i => i.name).join(', ') + (ls.length > 3 ? '…' : '');
+  return `<section class="look" data-look>
+    <button class="look-t" data-act="look-fold" aria-expanded="${open}"><span class="eye" aria-hidden="true">👀</span>Keep an eye out <span class="count">${ls.length}</span><span class="sub">${esc(peek)}</span><span class="chev">${I.chev}</span></button>
+    <div class="items" data-zone="look"${open ? '' : ' hidden'}>${ls.map(itemHTML).join('')}</div>
+  </section>`;
+}
+
 function tipsHTML() {
   return `<aside class="tips" aria-label="Tips">
     <div class="tips-h"><b>Try it out</b><span class="tips-sub">${state.sample ? 'This is a sample list.' : ''}</span><button class="icon-btn sm" data-act="tips-x" aria-label="Hide tips">${I.x}</button></div>
@@ -561,6 +599,7 @@ function tipsHTML() {
       <li>Tap <b>Aldi</b> to see what you can buy there. Items you add there are marked Aldi.</li>
       <li>Hold an item, or its handle, to drag it anywhere. Its <b>⋮</b> button has stores, one-off, move and delete.</li>
       <li>Tabs button (top right): one category or one store at a time. Swipe between them.</li>
+      <li><b>👀 Keep an eye out</b> (bottom) holds things you're hunting for. Tap <b>Aldi</b>: only what might be there shows. Check one off when you find it.</li>
     </ul>
     ${state.sample ? `<p class="tips-f">For your own list: menu (three dots), Clear everything.</p>` : ''}
   </aside>`;
@@ -588,12 +627,15 @@ function renderList() {
     const g = ui.wtab, f = i => inGroup(i, g);
     const secs = state.cats.filter(c => state.items.some(i => i.cat === c.id && visible(i) && f(i))).map(c => catHTML(c, 'sub', f)).join('');
     h += secs ? `<div id="cats">${secs}</div>` : groupEmptyHTML(g);
+    h += lookHTML();
   } else if (ui.view === 'tabs') {
     const c = cat(ui.tab);
     h += c ? `<div id="cats">${catHTML(c, 'solo')}</div>` : emptyHTML();
+    h += lookHTML();
   } else {
     const secs = visibleCats().map(c => catHTML(c, 'list')).join('');
     h += secs ? `<div id="cats">${secs}</div>` : emptyHTML();
+    h += lookHTML();
     if (secs && ui.store === 'all') h += `<button class="add-cat" data-act="add-cat">${I.plus} New category</button>`;
   }
   listEl.innerHTML = h;
@@ -624,21 +666,22 @@ function scrollToEl(el, center) {
 
 /* ---------- find or add ---------- */
 const key = s => norm(s).replace(/[^a-z0-9]/g, '');
-// "@costco" marks a store, "@anywhere" clears stores, "@once" makes a one-off.
+// "@costco" marks a store, "@anywhere" clears stores, "@once" makes a one-off, "@lookout" means keep an eye out.
 function parseQuery(raw) {
   const tags = [];
-  let any = false, once = false;
+  let any = false, once = false, look = false;
   const name = raw.replace(/(^|\s)@(\S*)/g, (m, sp, t) => {
     if (!t) return sp;
     const tn = key(t);
     if (!tn) return m;
     if (tn === 'any' || tn === 'anywhere') { any = true; return sp; }
     if (tn === 'once' || tn === 'oneoff') { once = true; return sp; }
+    if (tn === 'lookout' || tn === 'look' || tn === 'hunt') { look = true; return sp; }
     const s = state.stores.find(x => key(x.name).startsWith(tn));
     if (s) { if (!tags.includes(s.id)) tags.push(s.id); return sp; }
     return m;
   }).replace(/\s+/g, ' ').trim();
-  return {name, tags, any, once};
+  return {name, tags, any, once, look};
 }
 function subseq(n, q) { let j = 0; for (let i = 0; i < n.length && j < q.length; i++) if (n[i] === q[j]) j++; return j === q.length; }
 function score(n, qn) {
@@ -678,9 +721,10 @@ function addTarget() {
   }
   return {stores: ui.store !== 'all' ? [ui.store] : [], once: false};
 }
-function newWhere(pq, forceOnce) {
+// force: 'once' or 'look' when picked from the add rows.
+function newWhere(pq, force) {
   const t = addTarget();
-  return {stores: pq.any ? [] : pq.tags.length ? sortStores(pq.tags) : t.stores, once: !!(forceOnce || pq.once || t.once)};
+  return {stores: pq.any ? [] : pq.tags.length ? sortStores(pq.tags) : t.stores, once: !!(force === 'once' || pq.once || t.once), look: !!(force === 'look' || pq.look)};
 }
 function ensureCat() {
   let c = state.cats.find(x => x.name === 'Unsorted');
@@ -691,7 +735,7 @@ function ensureCat() {
 function resRow(i, query) {
   const c = cat(i.cat);
   const ss = i.stores.map(s => (store(s) || {}).name).filter(Boolean);
-  const meta = [c ? c.name : '', ss.length ? ss.join(', ') : 'Anywhere'].concat(i.once ? ['one-off'] : [], [i.done ? 'checked off ' + ago(i.doneAt) : 'on your list']);
+  const meta = [c ? c.name : '', ss.length ? ss.join(', ') : 'Anywhere'].concat(i.once ? ['one-off'] : [], [i.done ? 'checked off ' + ago(i.doneAt) : i.look ? 'keeping an eye out' : 'on your list']);
   return `<button class="res-row" data-res="${i.id}"><span class="rdot${i.done ? ' d' : ''}">${i.done ? I.tick : ''}</span><span class="rmain"><span class="rname">${hl(i.name, query)}</span><span class="rmeta">${esc(meta.join(' · '))}</span></span><span class="ract">${i.done ? 'Add back' : 'Show'}</span></button>`;
 }
 
@@ -707,7 +751,7 @@ function renderResults() {
     const t = addTarget();
     const ex = state.stores[0] ? '@' + key(state.stores[0].name) : '@store';
     const where = t.stores.length ? `New items here are marked <b>${esc(store(t.stores[0]).name)}</b>${t.once ? ' and one-off' : ''}. Add <b>@anywhere</b> to change that.`
-      : t.once ? 'New items here are one-offs.' : `Put <b>${esc(ex)}</b> at the end to mark where to buy it, or <b>@once</b> for a one-off.`;
+      : t.once ? 'New items here are one-offs.' : `Put <b>${esc(ex)}</b> at the end to mark where to buy it, <b>@once</b> for a one-off, or <b>@lookout</b> to keep an eye out for it.`;
     h += `<p class="res-tip">Type to find anything, including items you've checked off. Press Enter to add something new. ${where}</p>`;
   } else {
     const qn = norm(name);
@@ -716,10 +760,11 @@ function renderResults() {
     const exact = ms.find(i => norm(i.name) === qn);
     if (ms.length) h += `<div class="res-h">Already on file</div>` + ms.map(i => resRow(i, name)).join('');
     if (!exact) {
-      const dc = defaultCat(), nw = newWhere(pq, false);
-      const whereTxt = (nw.stores.map(id => store(id).name).join(', ') || 'Anywhere') + (nw.once ? ' · one-off' : '');
+      const dc = defaultCat(), nw = newWhere(pq);
+      const whereTxt = (nw.look ? 'keep an eye out · maybe at ' : '') + (nw.stores.map(id => store(id).name).join(', ') || 'Anywhere') + (nw.once ? ' · one-off' : '');
       h += `<div class="res-h">New item</div><button class="res-row" data-add="${dc || ''}"><span class="plus">${I.plus}</span><span class="rmain"><span>Add <b>${esc(name)}</b></span><span class="rmeta">to ${esc(dc ? cat(dc).name : 'Unsorted')} · ${esc(whereTxt)}</span></span><kbd>Enter</kbd></button>`;
       if (!nw.once) h += `<button class="res-row" data-add-once="${dc || ''}"><span class="plus alt">${I.plus}</span><span class="rmain"><span>Add as a one-off</span><span class="rmeta">Removed when you check it off, so it won't clutter your history</span></span></button>`;
+      if (!nw.look) h += `<button class="res-row" data-add-look="${dc || ''}"><span class="plus alt">${I.plus}</span><span class="rmain"><span>👀 Keep an eye out for it</span><span class="rmeta">Not on this trip's list. Shows under "Keep an eye out" in the stores where it might be.</span></span></button>`;
       const others = state.cats.filter(c => c.id !== dc);
       if (others.length) h += `<div class="catpick"><span>Or add to</span>${others.map(c => `<button class="chip" data-add="${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
     }
@@ -752,19 +797,20 @@ function bringBack(it, tags) {
   const msg = `${it.name} is back on your list` + (c ? ` (${c.name})` : '');
   if (!resultsEl.hidden) noteInSearch(msg, 'Undo', () => restore(snap)); else note(msg, 'Undo', () => restore(snap));
 }
-function addItem(name, cid, pq, forceOnce) {
+function addItem(name, cid, pq, force) {
   const snap = snapshot();
   if (!cid || !cat(cid)) cid = defaultCat() || ensureCat();
-  const {stores, once} = newWhere(pq, forceOnce);
-  const it = {id: uid(), name, cat: cid, stores, once, done: false, doneAt: 0, addedAt: Date.now()};
+  const {stores, once, look} = newWhere(pq, force);
+  const it = {id: uid(), name, cat: cid, stores, once, look, lookNote: '', done: false, doneAt: 0, addedAt: Date.now()};
   let last = -1;
   state.items.forEach((x, k) => { if (x.cat === cid) last = k; });
   state.items.splice(last >= 0 ? last + 1 : state.items.length, 0, it);
   ui.lastCat = cid;
   ui.collapsed[cid] = false;
+  if (look) ui.lookOpen = true;
   q.value = '';
   commit();
-  noteInSearch(`Added ${name} to ${cat(cid).name}` + (once ? ' as a one-off' : ''), 'Undo', () => restore(snap));
+  noteInSearch(look ? `Keeping an eye out for ${name}` : `Added ${name} to ${cat(cid).name}` + (once ? ' as a one-off' : ''), 'Undo', () => restore(snap));
 }
 function submitQuery() {
   const pq = parseQuery(q.value), {name, tags} = pq;
@@ -774,7 +820,7 @@ function submitQuery() {
   if (exact.done) return bringBack(exact, tags);
   if (tags.length) { applyTags(exact, tags); persist(); }
   q.value = '';
-  noteInSearch(`${exact.name} is already on your list`, 'Show', () => jumpTo(exact.id));
+  noteInSearch(exact.look ? `You're already keeping an eye out for ${exact.name}` : `${exact.name} is already on your list`, 'Show', () => jumpTo(exact.id));
 }
 function jumpTo(id) {
   const it = item(id);
@@ -785,6 +831,7 @@ function jumpTo(id) {
   else if (ui.view === 'tabs') ui.tab = it.cat;
   else ui.collapsed[it.cat] = false;
   if (it.done) ui.openDone[it.cat] = true;
+  if (it.look) ui.lookOpen = true;
   render();
   const el = listEl.querySelector(`.item[data-id="${id}"]`);
   if (el) { scrollToEl(el, true); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
@@ -816,7 +863,8 @@ resultsEl.addEventListener('click', e => {
     return;
   }
   if (b.hasAttribute('data-add') && name) addItem(name, b.dataset.add || null, pq);
-  if (b.hasAttribute('data-add-once') && name) addItem(name, b.dataset.addOnce || null, pq, true);
+  if (b.hasAttribute('data-add-once') && name) addItem(name, b.dataset.addOnce || null, pq, 'once');
+  if (b.hasAttribute('data-add-look') && name) addItem(name, b.dataset.addLook || null, pq, 'look');
 });
 
 /* ---------- item + category actions ---------- */
@@ -826,6 +874,7 @@ function toggleCheck(id, row) {
   const to = !it.done;
   if (row) row.classList.add(to ? 'checking' : 'unchecking');
   setTimeout(() => {
+    if (to && it.look) return foundIt(it);
     if (to && it.once) {
       const snap = snapshot();
       state.items = state.items.filter(i => i.id !== id);
@@ -835,6 +884,22 @@ function toggleCheck(id, row) {
     }
     it.done = to; it.doneAt = to ? Date.now() : 0; commit();
   }, reduced || !row ? 0 : 200);
+}
+// Checking off a lookout item = you found it. It becomes a normal checked-off item,
+// and you can save the store you're in as where it's sold.
+function foundIt(it) {
+  const snap = snapshot();
+  const here = byWhere() ? (store(ui.wtab) ? ui.wtab : null) : (store(ui.store) ? ui.store : null);
+  if (it.once) state.items = state.items.filter(i => i.id !== it.id);
+  else { it.look = false; it.done = true; it.doneAt = Date.now(); }
+  commit();
+  const undo = () => restore(snap);
+  if (it.once) return note(`Found ${it.name}! One-offs aren't kept.`, 'Undo', undo);
+  if (here && !(it.stores.length === 1 && it.stores[0] === here)) {
+    const s = store(here);
+    return note(`Found ${it.name}! Remember it's at ${s.name}?`, 'Remember', () => { it.stores = [here]; commit(); note(`${it.name} is now marked ${s.name}`, 'Undo', undo); });
+  }
+  note(`Found ${it.name}! It's now a regular item.` + (here ? '' : ' Set where in its ⋮ menu.'), 'Undo', undo);
 }
 /* Writing: one line is open at a time. {mode:'new', cat, after} adds items; {mode:'edit', id} edits a name. */
 function insertAt(it, cid, after) {
@@ -860,13 +925,13 @@ function addFromLine(L, text, done) {
     applyTags(ex, pq.tags);
     return {item: ex, existed: true, wasDone};
   }
-  const {stores, once} = newWhere(pq, false);
-  const it = {id: uid(), name: pq.name, cat: L.cat, stores, once, done: !!done, doneAt: done ? Date.now() : 0, addedAt: Date.now()};
+  const {stores, once, look} = newWhere(pq);
+  const it = {id: uid(), name: pq.name, cat: L.cat, stores, once, look: look && !done, lookNote: '', done: !!done, doneAt: done ? Date.now() : 0, addedAt: Date.now()};
   insertAt(it, L.cat, done ? null : L.after);
   return {item: it};
 }
-function shownHere(it) { return visible(it) && (!byWhere() || inGroup(it, ui.wtab)); }
-function whereName(it) { return it.once ? 'one-off' : it.stores.length ? it.stores.map(id => store(id).name).join(', ') : 'anywhere'; }
+function shownHere(it) { return !it.look && visible(it) && (!byWhere() || inGroup(it, ui.wtab)); }
+function whereName(it) { return it.look ? 'under Keep an eye out' : it.once ? 'one-off' : it.stores.length ? it.stores.map(id => store(id).name).join(', ') : 'anywhere'; }
 function startLine(cid) {
   finishRename(true);
   ui.opts = null;
@@ -942,7 +1007,8 @@ function lineEnter() {
     tmp.innerHTML = itemHTML(r.item);
     row.before(tmp.firstElementChild);
     L.after = r.item.id;
-  } else note(`Added ${r.item.name} (${whereName(r.item)}). It's hidden in this view.`);
+  } else if (r.item.look) { ui.lookOpen = true; render(); note(`Keeping an eye out for ${r.item.name}`); return; }
+  else note(`Added ${r.item.name} (${whereName(r.item)}). It's hidden in this view.`);
   inp.value = '';
   refreshCounts(row);
   scrollToEl(row, false);
@@ -1074,7 +1140,18 @@ function switchTab(dir) {
 listEl.addEventListener('click', e => {
   const host = e.target.closest('[data-opts]');
   const hostItem = host && item(host.dataset.opts);
-  const ob = e.target.closest('[data-once]'), opt = e.target.closest('[data-sopt]'), mv = e.target.closest('[data-move]');
+  const ob = e.target.closest('[data-once]'), opt = e.target.closest('[data-sopt]'), mv = e.target.closest('[data-move]'), lk = e.target.closest('[data-look]');
+  if (hostItem && lk) {
+    const it = hostItem, to = lk.dataset.look === '1';
+    if (to === it.look) return;
+    it.look = to;
+    if (to) { it.done = false; it.doneAt = 0; ui.lookOpen = true; }
+    commit();
+    note(to ? `Keeping an eye out for ${it.name}` : `${it.name} is back on your list`);
+    const el = listEl.querySelector(`.item[data-id="${it.id}"]`);
+    if (el) scrollToEl(el, true);
+    return;
+  }
   if (hostItem && (ob || opt)) {
     const it = hostItem;
     if (ob) it.once = ob.dataset.once === '1';
@@ -1111,6 +1188,7 @@ listEl.addEventListener('click', e => {
     case 'done': ui.openDone[cid] = !ui.openDone[cid]; render(); break;
     case 'add-cat': addCat(); break;
     case 'tips-x': ui.hint = false; render(); break;
+    case 'look-fold': ui.lookOpen = !ui.lookOpen; render(); break;
   }
 });
 listEl.addEventListener('keydown', e => {
@@ -1119,10 +1197,21 @@ listEl.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); lineEnter(); }
     else if (e.key === 'Escape') finishLine(true);
     else if (e.key === 'Backspace' && !t.value) { e.preventDefault(); lineBackspace(); }
+  } else if (t.hasAttribute('data-note')) {
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); t.blur(); }
   } else if (t.classList.contains('cname-in')) {
     if (e.key === 'Enter') { e.preventDefault(); finishRename(true); }
     else if (e.key === 'Escape') finishRename(false);
   }
+});
+listEl.addEventListener('input', e => {
+  if (!e.target.hasAttribute('data-note')) return;
+  const host = e.target.closest('[data-opts]'), it = host && item(host.dataset.opts);
+  if (!it) return;
+  it.lookNote = tidy(e.target.value);
+  persist();
+  const rowEl = host.previousElementSibling;
+  if (rowEl && rowEl.dataset.id === it.id) rowEl.outerHTML = rowHTML(it);
 });
 listEl.addEventListener('submit', e => { e.preventDefault(); if (e.target.matches('[data-lineform]')) lineEnter(); });
 listEl.addEventListener('paste', e => { if (e.target.id === 'line-in') pasteLines(e, false); });
@@ -1367,7 +1456,7 @@ function moveDrag(x, y) {
 }
 function itemTarget(x, y) {
   const el = document.elementFromPoint(x, y);
-  clearDrop(); drag.tab = null; drag.wtab = null; drag.foldCat = null;
+  clearDrop(); drag.tab = null; drag.wtab = null; drag.foldCat = null; drag.lookFold = false;
   if (!el) return;
   const tab = el.closest('.tab[data-tab], .tab[data-wtab]');
   if (tab) {
@@ -1381,6 +1470,13 @@ function itemTarget(x, y) {
     const r = row.getBoundingClientRect();
     if (y < r.top + r.height / 2) { if (row.previousElementSibling !== drag.ph) row.before(drag.ph); }
     else if (row.nextElementSibling !== drag.ph) row.after(drag.ph);
+    return;
+  }
+  const lk = el.closest('.look');
+  if (lk) {
+    const z = lk.querySelector('[data-zone="look"]');
+    if (z && !z.hidden) { if (drag.ph.parentElement !== z) z.append(drag.ph); }
+    else { lk.classList.add('drop'); drag.lookFold = true; }
     return;
   }
   const sec = el.closest('.cat');
@@ -1433,6 +1529,12 @@ function dropItem() {
     else { it.once = false; it.stores = g === 'any' ? [] : [g]; }
     return true;
   }
+  const z0 = drag.ph.parentElement;
+  if (drag.lookFold || (!drag.tab && !drag.foldCat && z0 && z0.dataset.zone === 'look')) {
+    if (it.look) return false;
+    it.look = true; it.done = false; it.doneAt = 0;
+    return true;
+  }
   if (drag.tab) {
     cid = drag.tab; done = false;
     const first = state.items.find(i => i.cat === cid && !i.done && i.id !== it.id && visible(i));
@@ -1448,7 +1550,7 @@ function dropItem() {
   }
   const arr = state.items;
   arr.splice(arr.indexOf(it), 1);
-  it.cat = cid;
+  it.cat = cid; it.look = false;
   if (done !== it.done) { it.done = done; it.doneAt = done ? Date.now() : 0; }
   let idx = -1;
   if (!done && beforeId) idx = arr.findIndex(i => i.id === beforeId);
@@ -1481,6 +1583,7 @@ function endDrag() {
     ok = dropItem();
     if (ok && d.tab && d.tab !== d.from) moved = `Moved ${item(d.id).name} to ${cat(d.tab).name}`;
     if (ok && d.foldCat && d.foldCat !== d.from) moved = `Moved ${item(d.id).name} to ${cat(d.foldCat).name}`;
+    if (ok && !d.wtab && item(d.id).look) moved = `Keeping an eye out for ${item(d.id).name}`;
     if (ok && d.wtab) {
       const nm = item(d.id).name;
       moved = d.wtab === 'once' ? `${nm} is now a one-off` : d.wtab === 'any' ? `${nm} can now be bought anywhere` : `${nm} is now marked ${store(d.wtab).name} only`;
